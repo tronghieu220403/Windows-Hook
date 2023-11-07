@@ -14,6 +14,7 @@ namespace iathook
 		unsigned long long base_address_ = 0;
         std::string image_file_name_;
         HANDLE process_info_handle_;
+        std::vector<HMODULE> module_list_;
 	public:
 
 		ProcessInfo() = default;
@@ -27,13 +28,15 @@ namespace iathook
         void UpdateImageFileName();
 
         std::vector<HMODULE> GetProcessModules();
+        void UpdateProcessModules();
 
         HANDLE GetProcessInfoHandle() const;
 
         ~ProcessInfo();
+        
     protected:
         void SetBaseAddress(unsigned long long base_address);
-        void SetImageFileName(std::string image_file_name);
+        void SetImageFileName(const std::string_view& image_file_name);
 	};
 }
 

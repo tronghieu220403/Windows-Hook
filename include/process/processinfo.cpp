@@ -26,9 +26,9 @@ namespace iathook
     {
         Process::UpdatePid();
         UpdateImageFileName();
-        std::vector<HMODULE> module_list = GetProcessModules();
+        UpdateProcessModules();
 
-        for (auto handle_module: module_list)
+        for (auto handle_module: GetProcessModules())
         {
             std::string module_name(10000, '\0');
             if (GetModuleFileNameExA(
@@ -46,7 +46,7 @@ namespace iathook
 
                 std::string image_module_name = dos_device_name + module_name.substr(end_of_device, module_name.size());
 
-                if (image_module_name == image_file_name_)
+                if (image_module_name == ProcessInfo::GetImageFileName())
                 {
                     MODULEINFO module_info;
                     GetModuleInformation(
@@ -65,29 +65,33 @@ namespace iathook
         return image_file_name_;
     }
 
-    void ProcessInfo::SetImageFileName(std::string image_file_name)
+    void ProcessInfo::SetImageFileName(const std::string_view& image_file_name)
     {
         image_file_name_ = image_file_name;
     }
     
     void ProcessInfo::UpdateImageFileName()
     {
-        std::string image_file_name(10000,0);
-
-        image_file_name.resize(GetProcessImageFileNameA(process_info_handle_, &image_file_name[0], 10000));
+        image_file_name_.resize(10000);
+        image_file_name_.resize(GetProcessImageFileNameA(process_info_handle_, &image_file_name_[0], 10000));
     }
 
     std::vector<HMODULE> ProcessInfo::GetProcessModules()
     {
-        std::vector<HMODULE> module_list(10000);
+        return module_list_;
+    }
+
+    void ProcessInfo::UpdateProcessModules()
+    {
         DWORD size = 0;
 
-        if (EnumProcessModules(process_info_handle_, module_list.data(), 10000, &size) == 0)
+        module_list_.resize(10000);
+
+        if (EnumProcessModules(process_info_handle_, module_list_.data(), 10000, &size) == 0)
         {
-            return std::vector<HMODULE>();
+            return;
         }
-        module_list.resize( size / sizeof(HMODULE));
-        return module_list;
+        module_list_.resize( size / sizeof(HMODULE));
     }
 
     HANDLE ProcessInfo::GetProcessInfoHandle() const
