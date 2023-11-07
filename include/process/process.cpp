@@ -1,11 +1,7 @@
-#define UNICODE
-#define _UNICODE
-
 #include "process/process.h"
-#include "process.h"
-namespace rat
-{
 
+namespace iathook
+{
 	Process::Process(): pid_(0) {};
 
 	Process::Process(int id): pid_(id) {};

@@ -5,7 +5,6 @@
 #define _UNICODE
 
 #include "process/process.h"
-
 #include "ulti/everything.h"
 
 namespace iathook
