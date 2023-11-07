@@ -8,7 +8,10 @@ namespace iathook
     }
 
     ProcessInfo::ProcessInfo(const std::string_view &name):
-        Process(name), process_info_handle_(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, GetPid()))
+        Process(name), 
+        process_info_handle_(OpenProcess(PROCESS_QUERY_INFORMATION | 
+                                            PROCESS_VM_READ, FALSE, 
+                                            Process::GetPid()))
     {
     }
 
