@@ -3,7 +3,10 @@
 namespace iathook
 {
     ProcessInfo::ProcessInfo(int id):
-        Process(id), process_info_handle_(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, GetPid()))
+        Process(id), 
+        process_info_handle_(OpenProcess(PROCESS_QUERY_INFORMATION | 
+                                            PROCESS_VM_READ, FALSE, 
+                                            Process::GetPid()))
     {
     }
 

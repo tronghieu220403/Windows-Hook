@@ -1,15 +1,7 @@
 #ifndef IATHOOK_PROCESS_PROCESS_H_
 #define IATHOOK_PROCESS_PROCESS_H_
 
-#define UNICODE
-#define _UNICODE
-
-#include <string.h>
-#include <WS2tcpip.h>
-#include <TlHelp32.h>
-
-#include <string>
-#include <fstream>
+#include "ulti/everything.h"
 
 namespace iathook
 {

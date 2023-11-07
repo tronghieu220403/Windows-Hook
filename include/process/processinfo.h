@@ -1,9 +1,6 @@
 #ifndef IATHOOK_PROCESS_PROCESSINFO_H_
 #define IATHOOK_PROCESS_PROCESSINFO_H_
 
-#define UNICODE
-#define _UNICODE
-
 #include "process/process.h"
 #include "ulti/everything.h"
 
@@ -33,7 +30,7 @@ namespace iathook
         HANDLE GetProcessInfoHandle() const;
 
         ~ProcessInfo();
-        
+
     protected:
         void SetBaseAddress(unsigned long long base_address);
         void SetImageFileName(const std::string_view& image_file_name);
