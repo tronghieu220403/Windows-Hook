@@ -12,7 +12,7 @@ namespace iathook
 	public:
 
 		Process();
-		explicit Process(int id);
+		explicit Process(int pid);
 		explicit Process(const std::string_view& name);
 		
 		int GetPid() const;

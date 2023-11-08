@@ -8,6 +8,7 @@ namespace iathook
                                             PROCESS_VM_READ, FALSE, 
                                             Process::GetPid()))
     {
+        UpdateBaseAddress();
     }
 
     ProcessInfo::ProcessInfo(const std::string_view &name):
@@ -16,6 +17,7 @@ namespace iathook
                                             PROCESS_VM_READ, FALSE, 
                                             Process::GetPid()))
     {
+        UpdateBaseAddress();
     }
 
     unsigned long long ProcessInfo::GetBaseAddress() const
@@ -75,7 +77,7 @@ namespace iathook
     {
         image_file_name_ = image_file_name;
     }
-    
+
     void ProcessInfo::UpdateImageFileName()
     {
         image_file_name_.resize(10000);
@@ -85,6 +87,11 @@ namespace iathook
     std::vector<HMODULE> ProcessInfo::GetProcessModules()
     {
         return module_list_;
+    }
+
+    void ProcessInfo::SetProcessModules(const std::vector<HMODULE> module_list)
+    {
+        module_list_ = module_list;
     }
 
     void ProcessInfo::UpdateProcessModules()
@@ -105,11 +112,23 @@ namespace iathook
         return process_info_handle_;
     }
 
-    ProcessInfo::~ProcessInfo()
+    void ProcessInfo::CloseProcessInfoHandle()
     {
         if (process_info_handle_ != 0 && process_info_handle_ != (HANDLE)(-1))
         {
             CloseHandle(process_info_handle_);
+            process_info_handle_ = 0;
         }
+    }
+
+    void ProcessInfo::SetProcessInfoHandle(const HANDLE process_info_handle)
+    {
+        CloseProcessInfoHandle();
+        process_info_handle_ = process_info_handle;
+    }
+
+    ProcessInfo::~ProcessInfo()
+    {
+        CloseProcessInfoHandle();
     }
 }

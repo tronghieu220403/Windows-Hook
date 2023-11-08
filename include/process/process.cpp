@@ -4,7 +4,7 @@ namespace iathook
 {
 	Process::Process(): pid_(0) {};
 
-	Process::Process(int id): pid_(id) {};
+	Process::Process(int pid): pid_(pid) {};
 
 	Process::Process(const std::string_view& name): name_(name), pid_(FindProcessByName(name)) {};
 
@@ -18,7 +18,10 @@ namespace iathook
 
     void Process::UpdatePid()
     {
-        pid_ = FindProcessByName(name_);
+        if (!name_.empty())
+        {
+            pid_ = FindProcessByName(name_);
+        }
     };
 
     std::string Process::GetName() const
