@@ -1,6 +1,6 @@
 #include "processmemory.h"
 
-namespace iathook
+namespace process
 {
 
     ProcessMemory::ProcessMemory(int pid):

@@ -4,7 +4,7 @@
 #include "process/process.h"
 #include "ulti/everything.h"
 
-namespace iathook
+namespace process
 {
 	class ProcessInfo: public Process 
     {

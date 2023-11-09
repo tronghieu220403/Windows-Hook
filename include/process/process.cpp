@@ -1,6 +1,6 @@
 #include "process/process.h"
 
-namespace iathook
+namespace process
 {
 	Process::Process(): pid_(0) {};
 
