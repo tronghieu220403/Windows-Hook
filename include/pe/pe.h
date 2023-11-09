@@ -14,22 +14,31 @@ namespace iathook
         std::vector<UCHAR> data;
     };
 
-    class PeOnMemory: public ProcessControl
+    class Pe64OnMemory: public ProcessControl
     {
         private:
             std::vector<UCHAR> data_;
 
             DWORD entry_point_;
-            WORD magic_;
             
+            IMAGE_NT_HEADERS64 nt_headers_64_ = {0};
+
+            WORD magic_ = 0;
+
+            DWORD p_iat_ = 0;
         public:
 
-            PeOnMemory() = default;
-            PeOnMemory(const ProcessControl& process_control);
+            Pe64OnMemory() = default;
+            Pe64OnMemory(const ProcessControl& process_control);
+
+            void ReadPeOnMemory();
+
+            bool IsValid();
+            bool IsArch64();
 
             std::vector<UCHAR> GetData() const;
             void SetData(const std::vector<UCHAR> data);
-        
+
         protected:
 
     };

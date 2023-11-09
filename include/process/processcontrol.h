@@ -9,10 +9,12 @@ namespace iathook
 	class ProcessControl: public ProcessInfo 
     {
 	private:
+    
 		ULONGLONG base_address_ = 0;
         std::string image_file_name_;
         HANDLE process_control_handle_ = 0;
         std::vector<HMODULE> module_list_;
+
 	public:
 
 		ProcessControl() = default;
