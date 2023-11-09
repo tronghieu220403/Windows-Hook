@@ -45,13 +45,16 @@ namespace pe
         }
     }
 
-    DWORD ImportDirectoryTable::GetRvaOfFunction(std::string dll_name, std::string function_name)
+    DWORD ImportDirectoryTable::GetRvaOfFunction(const std::string_view& dll_name, const std::string_view& function_name)
     {
         for (auto& entry: entry_vector_)
         {
             if (entry.GetDllName() == dll_name)
             {
-                
+                if (entry.GetRvaLocationInIatByName(function_name))
+                {
+
+                }
             }
         }
 

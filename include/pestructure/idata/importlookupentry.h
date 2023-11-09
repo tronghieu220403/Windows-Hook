@@ -2,7 +2,7 @@
 #define IATHOOK_PESTRUCTURE_IDATA_IMPORTLOOKUPENTRY_H_
 
 #include "ulti/everything.h"
-#include "pestructure/idata/hintnametable.h"
+#include "pestructure/idata/hintnameentry.h"
 
 namespace pe
 {
@@ -10,7 +10,7 @@ namespace pe
     {
     private:
         std::vector<ulti::Field> field_vector_;
-        HintNameTable entry_;
+        HintNameEntry entry_;
         WORD version_;
     public:
 
@@ -25,7 +25,7 @@ namespace pe
         bool IsOrdinalFlag() const;
         bool IsNameFlag() const;
 
-        
+        bool HasFunction(const std::string_view& function_name);
 
         ulti::Field GetFieldByName(const std::string& name);
 

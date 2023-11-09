@@ -21,6 +21,8 @@ namespace pe
 
         void SetImportLookupTableData(PUCHAR pe_data, DWORD rva);
 
+        DWORD GetFunctionOrdinal(const std::string_view& function_name);
+
         std::string ToString(int pad);
         
     };

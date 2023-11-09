@@ -73,9 +73,15 @@ namespace pe
         return field_str_vector_[0].value;
     }
 
-    DWORD ImportDirectoryEntry::GetRvaLocationInIatByName(std::string function_name)
+    DWORD ImportDirectoryEntry::GetRvaLocationInIatByName(const std::string_view& function_name)
     {
-        return 0;
+        DWORD ordinal = import_lookup_table_.GetFunctionOrdinal(function_name);
+        if (ordinal == (DWORD)(-1))
+        {
+            return (DWORD)(-1);
+        }
+        DWORD iat_rva = field_vector_[4].value;
+        return iat_rva + ordinal * (version_ == 0x20b ? 8 : 4);
     }
 
     std::string ImportDirectoryEntry::ToString(int pad)

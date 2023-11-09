@@ -56,6 +56,19 @@ namespace pe
         }
     }
 
+    DWORD ImportLookupTable::GetFunctionOrdinal(const std::string_view &function_name)
+    {
+        for (int i = 0; i < import_lookup_entry_vector_.size(); i++)
+        {
+            if (import_lookup_entry_vector_[i].HasFunction(function_name))
+            {
+                return i;
+            }
+        }
+
+        return (DWORD)(-1);
+    }
+
     std::string ImportLookupTable::ToString(int pad)
     {
         std::string s;

@@ -53,7 +53,7 @@ namespace pe
                     rva,
                     4
                 });
-                entry_ = HintNameTable(pe_data, rva);
+                entry_ = HintNameEntry(pe_data, rva);
             }
         }
         else
@@ -76,10 +76,9 @@ namespace pe
                     rva,
                     4
                 });
-                entry_ = HintNameTable(pe_data, rva);
+                entry_ = HintNameEntry(pe_data, rva);
             }
         }
-        
     }
 
     bool ImportLookupEntry::IsOrdinalFlag() const
@@ -91,7 +90,12 @@ namespace pe
     {
         return false;
     }
-    
+
+    bool ImportLookupEntry::HasFunction(const std::string_view &function_name)
+    {
+        return entry_.GetNameField().value == function_name;
+    }
+
     ulti::Field ImportLookupEntry::GetFieldByName(const std::string &name)
     {
         for (auto& field: field_vector_)

@@ -23,7 +23,7 @@ namespace pe
         void SetImportDirectoryEntry(PUCHAR pe_data, DWORD rva);
 
         std::string GetDllName() const;
-        DWORD GetRvaLocationInIatByName(std::string function_name);
+        DWORD GetRvaLocationInIatByName(const std::string_view& function_name);
 
         std::string ToString(int pad);
 

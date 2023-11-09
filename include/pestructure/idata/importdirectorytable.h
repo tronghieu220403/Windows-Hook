@@ -20,7 +20,7 @@ namespace pe
 
         void SetImportDirectoryTableData(PUCHAR pe_data, DWORD rva);
 
-        DWORD GetRvaOfFunction(std::string dll_name, std::string function_name);
+        DWORD GetRvaOfFunction(const std::string_view& dll_name, const std::string_view& function_name);
 
         std::string ToString(int pad);
 
