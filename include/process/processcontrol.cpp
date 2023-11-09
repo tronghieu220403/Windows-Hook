@@ -46,10 +46,41 @@ namespace iathook
         return 0;
     }
 
-    DWORD ProcessControl::SetMemoryProtection(unsigned long long virtual_address, unsigned long long size, DWORD new_protection)
+    bool ProcessControl::SetMemoryProtection(unsigned long long virtual_address, unsigned long long size, DWORD new_protection)
     {
         DWORD old_protect;
-        return VirtualProtectEx(process_control_handle_, (LPVOID)((unsigned long long)GetBaseAddress() + virtual_address), size, new_protection, &old_protect);
+        return VirtualProtectEx(process_control_handle_, (LPVOID)((unsigned long long)GetBaseAddress() + virtual_address), size, new_protection, &old_protect) != 0;
+    }
+
+    std::vector<UCHAR> ProcessControl::ReadData(size_t virtual_address, size_t size)
+    {
+        std::vector<UCHAR> buffer(size);
+        if (ReadProcessMemory(process_control_handle_, (LPVOID)(GetBaseAddress() + virtual_address), buffer.data(), size, NULL) == 0)
+        {
+            return std::vector<UCHAR>();
+        }
+        return buffer;
+    }
+
+    bool ProcessControl::WriteData(size_t virtual_address, std::vector<UCHAR> data)
+    {
+        return ProcessControl::WriteData(virtual_address, data.data(), data.size());
+    }
+
+    bool ProcessControl::WriteData(size_t virtual_address, const PUCHAR data, size_t size)
+    {
+        DWORD old_protection = ProcessControl::GetMemoryProtection(virtual_address, size);
+        if (ProcessControl::SetMemoryProtection(virtual_address, size, PAGE_EXECUTE_READWRITE) == false)
+        {
+            return false;
+        }
+        if (WriteProcessMemory(process_control_handle_, (LPVOID)(GetBaseAddress() + virtual_address), data, size, NULL) == 0)
+        {
+            ProcessControl::SetMemoryProtection(virtual_address, size, old_protection);
+            return false;
+        }
+        ProcessControl::SetMemoryProtection(virtual_address, size, old_protection);
+        return true;
     }
 
     ProcessControl::~ProcessControl()

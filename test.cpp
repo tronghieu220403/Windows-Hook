@@ -11,9 +11,14 @@
 
 using namespace std;
 
+size_t offset = 0x00009000;
+
 int main()
 {
-    int pid = 9688;
+    int pid = 9364;
+    
+    HANDLE current_process_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, FALSE, GetCurrentProcessId());
+
     HANDLE process_info_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, FALSE, pid);
     LPVOID base_address = NULL;
 
@@ -52,46 +57,59 @@ int main()
                 break;
             }
         }
-
     }
 
-    cout << base_address << endl;
+    cout << "Target base address: 0x" << hex << base_address << endl;
+
+    size_t addr = (unsigned long long)base_address + offset;
 
     MEMORY_BASIC_INFORMATION mem_info;
 
-    if (VirtualQueryEx(process_info_handle, (LPVOID)((unsigned long long)base_address), &mem_info, 1000) != 0)
+    if (VirtualQueryEx(process_info_handle, (LPVOID)(addr), &mem_info, 1000) != 0)
     {
-        cout << "0x" << hex << mem_info.AllocationProtect << endl;
-        cout << "0x" << hex << mem_info.Protect << endl;
+        cout << "Query oke,protection: 0x" << hex << mem_info.Protect << endl;
     }
     else
     {
-        cout << "Failed: " << GetLastError() << endl;
+        cout << "Query failed: " << GetLastError() << endl;
     }
-    
+
     // VirtualAllocEx() WriteProcessMemory() and ReadProcessMemory()
 
-    // char c = *(char *)((LPVOID)base_address);
-    // cout << c << endl;
-
-    /*
     DWORD lpflOldProtect;
 
-    if (VirtualProtectEx(process_info_handle, (LPVOID)((unsigned long long)base_address), 0x1000, PAGE_READONLY, &lpflOldProtect) == 0)
+    if (VirtualProtectEx(process_info_handle, (LPVOID)addr, 0x1000, PAGE_EXECUTE_READWRITE, &lpflOldProtect) == 0)
     {
-        cout << "false" << endl;
-        cout << GetLastError() << endl;
+        cout << "Set protect fail" << " ";
+        cout << (ULONG)GetLastError() << endl;
     }
     else
     {
-        cout << "true" << endl;
-        cout << "0x" << hex << lpflOldProtect << endl;
+        cout << "Set PAGE_EXECUTE_READWRITE (0x80) success." << endl;
+    }
+    
+    if (VirtualQueryEx(process_info_handle, (LPVOID)((unsigned long long)addr), &mem_info, 1000) != 0)
+    {
+        cout << "New protection: " << "0x" << hex << mem_info.Protect << endl;
     }
 
-    if (VirtualQueryEx(process_info_handle, (LPVOID)((unsigned long long)base_address), &mem_info, 1000) != 0)
+    char c[3];
+    size_t n_bytes;
+
+    if (WriteProcessMemory(process_info_handle, (LPVOID)(addr), "hi", 2, NULL) == 0)
     {
-        cout << "0x" << hex << mem_info.AllocationProtect << endl;
+        cout << "Write failed, error: " << (ULONG)GetLastError() << endl;
+        return 0;
     }
+    /*
+    if (ReadProcessMemory(process_info_handle, (LPVOID)(addr), c, 2, &n_bytes) == 0)
+    {
+        cout << "Read false" << endl;
+        return 0;
+    }
+    cout << hex << (ULONG)(c[0]) << endl;
+    cout << hex << (ULONG)(c[1]) << endl;
     */
+
     CloseHandle(process_info_handle);
 }

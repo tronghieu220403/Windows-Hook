@@ -3,9 +3,10 @@
 #ifndef IATHOOK_PE_PE_H_
 #define IATHOOK_PE_PE_H_
 
+#include "process/processcontrol.h"
 #include "ulti/everything.h"
 
-namespace pe
+namespace iathook
 {
     struct SECTION
     {
@@ -13,11 +14,10 @@ namespace pe
         std::vector<UCHAR> data;
     };
 
-    class PeOnMemory
+    class PeOnMemory: public ProcessControl
     {
         private:
             std::vector<UCHAR> data_;
-            std::string name_;
 
             DWORD entry_point_;
             WORD magic_;
@@ -25,12 +25,10 @@ namespace pe
         public:
 
             PeOnMemory() = default;
-            PeOnMemory(const PUCHAR data);
+            PeOnMemory(const ProcessControl& process_control);
 
             std::vector<UCHAR> GetData() const;
             void SetData(const std::vector<UCHAR> data);
-
-            void FlushChange();
         
         protected:
 

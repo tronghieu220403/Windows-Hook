@@ -24,8 +24,11 @@ namespace iathook
         HANDLE GetProcessControlHandle() const;
 
         DWORD GetMemoryProtection(unsigned long long virtual_address, unsigned long long size);
-        
-        DWORD SetMemoryProtection(unsigned long long virtual_address, unsigned long long size, DWORD new_protection);
+        bool SetMemoryProtection(unsigned long long virtual_address, unsigned long long size, DWORD new_protection);
+
+        std::vector<UCHAR> ReadData(size_t virtual_address, size_t size);
+        bool WriteData(size_t virtual_address, std::vector<UCHAR> data);
+        bool WriteData(size_t virtual_address, const PUCHAR data, size_t size);
 
         ~ProcessControl();
 

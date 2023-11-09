@@ -1,11 +1,12 @@
 #include "pe/pe.h"
 #include "pe.h"
 
-namespace pe
+namespace iathook
 {
-    PeOnMemory::PeOnMemory(const PUCHAR data)
+
+    PeOnMemory::PeOnMemory(const ProcessControl& process_control):
+        ProcessControl(process_control)
     {
-        
     }
 
     std::vector<UCHAR> PeOnMemory::GetData() const
@@ -17,13 +18,9 @@ namespace pe
     {
         data_ = data;
     }
-
-    void PeOnMemory::FlushChange()
+    DWORD Align(DWORD value, DWORD alignment)
     {
-
+        return 0;
     }
-}
-DWORD pe::Align(DWORD value, DWORD alignment)
-{
-    return 0;
+
 }
