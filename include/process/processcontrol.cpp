@@ -69,17 +69,11 @@ namespace iathook
 
     bool ProcessControl::WriteData(size_t virtual_address, const PUCHAR data, size_t size)
     {
-        DWORD old_protection = ProcessControl::GetMemoryProtection(virtual_address, size);
-        if (ProcessControl::SetMemoryProtection(virtual_address, size, PAGE_EXECUTE_READWRITE) == false)
-        {
-            return false;
-        }
+        // WriteProcessMemory() internally does change the MemoryProtection to writable if it can not write.
         if (WriteProcessMemory(process_control_handle_, (LPVOID)(GetBaseAddress() + virtual_address), data, size, NULL) == 0)
         {
-            ProcessControl::SetMemoryProtection(virtual_address, size, old_protection);
             return false;
         }
-        ProcessControl::SetMemoryProtection(virtual_address, size, old_protection);
         return true;
     }
 

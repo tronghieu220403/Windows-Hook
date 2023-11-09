@@ -19,7 +19,7 @@ int main()
     
     HANDLE current_process_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, FALSE, GetCurrentProcessId());
 
-    HANDLE process_info_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, FALSE, pid);
+    HANDLE process_info_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid);
     LPVOID base_address = NULL;
 
     string process_name_path(10000, '\0');
