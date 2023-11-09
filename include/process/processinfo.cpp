@@ -1,6 +1,6 @@
 #include "processinfo.h"
 
-namespace iathook
+namespace process
 {
     ProcessInfo::ProcessInfo(int id):
         Process(id), 
