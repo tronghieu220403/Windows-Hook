@@ -47,13 +47,13 @@ namespace pe
             }
             else
             {
-                DWORD rva = ulti::MemoryToUint32(pe_data + rva) & 0xffffffff;
+                DWORD hint_rva = ulti::MemoryToUint32(pe_data + rva) & 0xffffffff;
                 field_vector_.push_back(ulti::Field{
                     "Hint/Name Table RVA",
-                    rva,
+                    hint_rva,
                     4
                 });
-                entry_ = HintNameEntry(pe_data, rva);
+                entry_ = HintNameEntry(pe_data, hint_rva);
             }
         }
         else
@@ -70,13 +70,13 @@ namespace pe
             else
             {
                 // Import by name
-                DWORD rva = ulti::MemoryToUint32(pe_data + rva) & 0xffffffff;
+                DWORD hint_rva = ulti::MemoryToUint32(pe_data + rva) & 0xffffffff;
                 field_vector_.push_back(ulti::Field{
                     "Hint/Name Table RVA",
-                    rva,
+                    hint_rva,
                     4
                 });
-                entry_ = HintNameEntry(pe_data, rva);
+                entry_ = HintNameEntry(pe_data, hint_rva);
             }
         }
     }
