@@ -1,5 +1,5 @@
-#ifndef IATHOOK_PEHEADER_IMPORTDIRECTORY_IMPORTLOOKUPTABLE_H_
-#define IATHOOK_PEHEADER_IMPORTDIRECTORY_IMPORTLOOKUPTABLE_H_
+#ifndef IATHOOK_PESTRUCTURE_IMPORTDIRECTORY_IMPORTLOOKUPTABLE_H_
+#define IATHOOK_PESTRUCTURE_IMPORTDIRECTORY_IMPORTLOOKUPTABLE_H_
 
 #include "ulti/everything.h"
 #include "pestructure/idata/importlookupentry.h"
@@ -20,8 +20,6 @@ namespace pe
         void SetVersion(WORD version);
 
         void SetImportLookupTableData(PUCHAR pe_data, DWORD rva);
-
-        DWORD GetFunctionOrdinal(const std::string_view& function_name);
 
         std::string ToString(int pad);
         

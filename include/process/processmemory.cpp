@@ -9,6 +9,12 @@ namespace process
         OpenProcessControlHandle();
     }
 
+    ProcessMemory::ProcessMemory(const std::string_view& process_name):
+        ProcessInfo(process_name)
+    {
+        OpenProcessControlHandle();
+    }
+
     ProcessMemory::ProcessMemory(const ProcessInfo &process_info):
         ProcessInfo(process_info)
     {

@@ -51,13 +51,9 @@ namespace pe
         {
             if (entry.GetDllName() == dll_name)
             {
-                if (entry.GetRvaLocationInIatByName(function_name))
-                {
-
-                }
+                return entry.GetRvaLocationInIatByName(function_name);
             }
         }
-
         return 0;
     }
 

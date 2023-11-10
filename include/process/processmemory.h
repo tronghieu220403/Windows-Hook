@@ -19,6 +19,7 @@ namespace process
 
 		ProcessMemory() = default;
 		explicit ProcessMemory(int pid);
+        explicit ProcessMemory(const std::string_view& process_name);
 		explicit ProcessMemory(const ProcessInfo& process_info);
 
         void OpenProcessControlHandle();

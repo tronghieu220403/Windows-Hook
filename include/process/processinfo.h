@@ -17,7 +17,7 @@ namespace process
 
 		ProcessInfo() = default;
 		explicit ProcessInfo(int id);
-		explicit ProcessInfo(const std::string_view& name);
+		explicit ProcessInfo(const std::string_view& process_name);
 		
         unsigned long long GetBaseAddress() const;
         void UpdateBaseAddress();

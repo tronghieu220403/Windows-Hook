@@ -29,6 +29,8 @@ namespace pe
         memcpy(&nt_headers_64_, p_nt_headers_data.data(), sizeof(IMAGE_NT_HEADERS64));
 
         iat_rva_ = nt_headers_64_.OptionalHeader.DataDirectory[1].VirtualAddress;
+
+        // Read all data of 
     }
 
     bool Pe64Memory::IsValid()
