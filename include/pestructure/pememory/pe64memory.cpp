@@ -5,13 +5,13 @@ namespace pe
     Pe64Memory::Pe64Memory(int pid):
         process::ProcessMemory(pid)
     {
-
+        ReadPeOnMemory();
     }
 
     Pe64Memory::Pe64Memory(const std::string_view &process_name):
         process::ProcessMemory(process_name)
     {
-
+        ReadPeOnMemory();
     }
 
     Pe64Memory::Pe64Memory(const process::ProcessMemory& process_control):

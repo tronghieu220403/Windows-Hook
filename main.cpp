@@ -2,21 +2,16 @@
 
 #include "process/processmemory.h"
 #include "pestructure/pememory/pe64memory.h"
+#include "hook/iathook/iathook.h"
 
 using namespace std;
 
 int main()
 {
-	pe::Pe64Memory p(19400);
-	cout << hex << p.GetBaseAddress() << endl;
-	DWORD protection = p.GetMemoryProtection(0, 0x1000);
-	if (protection == 0)
-	{
-		cout << "error" << endl << (unsigned long)GetLastError();
-	}
-	else
-	{
-		cout << hex << nouppercase << protection;
-	}
+	hook::IatHook iat_hook("process_sample.exe");
+	cout << hex << iat_hook.GetFunctionAddressOnIat("KERNEL32.dll", "OpenProcess") << endl;
+
+	//cout << p.GetImportDirectoryTable()->GetRvaOfFunction("KERNEL32.dll", "OpenProcess");
+	
 
 }
