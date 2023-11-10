@@ -60,6 +60,38 @@ void test()
     cout << "Target base address: 0x" << hex << base_address << endl;
 
     size_t addr = (unsigned long long)base_address + offset;
+
+    MEMORY_BASIC_INFORMATION mem_info;
+
+    if (VirtualQueryEx(process_info_handle, (LPVOID)(addr), &mem_info, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
+    {
+        cout << "Query oke,protection: 0x" << hex << mem_info.Protect << endl;
+    }
+    else
+    {
+        cout << "Query failed: " << GetLastError() << endl;
+    }
+
+    // VirtualAllocEx() WriteProcessMemory() and ReadProcessMemory()
+
+    DWORD lpflOldProtect;
+
+    if (VirtualProtectEx(process_info_handle, (LPVOID)addr, 0x1000, PAGE_EXECUTE_READWRITE, &lpflOldProtect) == 0)
+    {
+        cout << "Set protect fail" << " ";
+        cout << (ULONG)GetLastError() << endl;
+    }
+    else
+    {
+        cout << "Set PAGE_EXECUTE_READWRITE (0x80) success." << endl;
+    }
+    
+    if (VirtualQueryEx(process_info_handle, (LPVOID)((unsigned long long)addr), &mem_info, 1000) != 0)
+    {
+        cout << "New protection: " << "0x" << hex << mem_info.Protect << endl;
+    }
+
+    char c[3];
     size_t n_bytes;
     std::vector<UCHAR> c;
     DWORD image_size = 0x00024000;

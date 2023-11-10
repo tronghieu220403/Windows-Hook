@@ -9,7 +9,7 @@ namespace process
         OpenProcessControlHandle();
     }
 
-    ProcessMemory::ProcessMemory(const std::string_view& process_name):
+    ProcessMemory::ProcessMemory(const std::string_view &process_name):
         ProcessInfo(process_name)
     {
         OpenProcessControlHandle();
@@ -23,7 +23,7 @@ namespace process
 
     void ProcessMemory::OpenProcessControlHandle()
     {
-        process_control_handle_ = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, GetPid());
+        process_control_handle_ = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, GetPid());
     }
 
     void ProcessMemory::CloseProcessControlHandle()
@@ -42,9 +42,9 @@ namespace process
 
     DWORD ProcessMemory::GetMemoryProtection(unsigned long long rva, unsigned long long size)
     {
-        MEMORY_BASIC_INFORMATION mem_info;
+        MEMORY_BASIC_INFORMATION mem_info = { 0 };
 
-        if (VirtualQueryEx(process_control_handle_, (LPVOID)(GetBaseAddress() + rva), &mem_info, size) != 0)
+        if (VirtualQueryEx(process_control_handle_, (LPVOID)(GetBaseAddress() + rva), &mem_info, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
         {
             return mem_info.Protect;
         }

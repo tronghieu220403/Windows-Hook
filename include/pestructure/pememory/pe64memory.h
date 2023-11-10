@@ -31,9 +31,9 @@ namespace pe
         public:
 
             Pe64Memory() = default;
-            Pe64Memory(int pid);
+            Pe64Memory(int pid);;
             Pe64Memory(const std::string_view& process_name);
-            Pe64Memory(const process::ProcessMemory& process_control);
+            Pe64Memory(const process::ProcessMemory& process_memory);
 
             void ReadPeOnMemory();
 
