@@ -31,6 +31,8 @@ namespace pe
         public:
 
             Pe64Memory() = default;
+            Pe64Memory(int pid);
+            Pe64Memory(const std::string_view& process_name);
             Pe64Memory(const process::ProcessMemory& process_control);
 
             void ReadPeOnMemory();
@@ -39,10 +41,12 @@ namespace pe
             bool IsArch64();
 
             std::vector<UCHAR> GetData() const;
-            void SetData(const std::vector<UCHAR> data);
 
+            std::shared_ptr<ImportDirectoryTable> GetImportDirectoryTable() const;
             
         protected:
+            void SetData(const std::vector<UCHAR> data);
+            void SetImportDirectoryTable(const std::shared_ptr<ImportDirectoryTable>& idt);
 
     };
 

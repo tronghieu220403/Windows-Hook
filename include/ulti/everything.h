@@ -5,6 +5,8 @@
 #include <WS2tcpip.h>
 #include <TlHelp32.h>
 #include <psapi.h>
+#include <winternl.h>
+#include <imagehlp.h>
 
 #include <fstream>
 #include <iostream>
@@ -36,8 +38,8 @@ namespace ulti
     int MemoryToInt32(const void* data);
     WORD MemoryToUint16(const void* data);
     std::string MemoryToString(const void* data);
-    std::wstring MemoryToWstring(const WCHAR *data);
-    std::wstring MemoryToWstring(const WCHAR *data, int size);
+    std::wstring MemoryToWstring(const void *data);
+    std::wstring MemoryToWstring(const void *data, int size);
     std::string ToHex(ULONGLONG value);
 }
 

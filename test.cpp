@@ -11,14 +11,12 @@
 
 using namespace std;
 
-size_t offset = 0x00009000;
+size_t offset = 0;
 
-int main()
+void test()
 {
-    int pid = 9364;
+    int pid = 1176;
     
-    HANDLE current_process_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, FALSE, GetCurrentProcessId());
-
     HANDLE process_info_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid);
     LPVOID base_address = NULL;
 
@@ -32,7 +30,7 @@ int main()
 
     if (EnumProcessModules(process_info_handle, module_list.data(), 10000, &size) == 0)
     {
-        return 0;
+        return;
     }
     module_list.resize( size / sizeof(HMODULE));
     for (auto handle_module: module_list)
@@ -62,54 +60,29 @@ int main()
     cout << "Target base address: 0x" << hex << base_address << endl;
 
     size_t addr = (unsigned long long)base_address + offset;
-
-    MEMORY_BASIC_INFORMATION mem_info;
-
-    if (VirtualQueryEx(process_info_handle, (LPVOID)(addr), &mem_info, 1000) != 0)
-    {
-        cout << "Query oke,protection: 0x" << hex << mem_info.Protect << endl;
-    }
-    else
-    {
-        cout << "Query failed: " << GetLastError() << endl;
-    }
-
-    // VirtualAllocEx() WriteProcessMemory() and ReadProcessMemory()
-
-    DWORD lpflOldProtect;
-
-    if (VirtualProtectEx(process_info_handle, (LPVOID)addr, 0x1000, PAGE_EXECUTE_READWRITE, &lpflOldProtect) == 0)
-    {
-        cout << "Set protect fail" << " ";
-        cout << (ULONG)GetLastError() << endl;
-    }
-    else
-    {
-        cout << "Set PAGE_EXECUTE_READWRITE (0x80) success." << endl;
-    }
-    
-    if (VirtualQueryEx(process_info_handle, (LPVOID)((unsigned long long)addr), &mem_info, 1000) != 0)
-    {
-        cout << "New protection: " << "0x" << hex << mem_info.Protect << endl;
-    }
-
-    char c[3];
     size_t n_bytes;
-
-    if (WriteProcessMemory(process_info_handle, (LPVOID)(addr), "hi", 2, NULL) == 0)
-    {
-        cout << "Write failed, error: " << (ULONG)GetLastError() << endl;
-        return 0;
-    }
-    /*
-    if (ReadProcessMemory(process_info_handle, (LPVOID)(addr), c, 2, &n_bytes) == 0)
+    std::vector<UCHAR> c;
+    DWORD image_size = 0x00024000;
+    c.resize(image_size);
+    MEMORY_BASIC_INFORMATION mem_info;
+    
+    if (ReadProcessMemory(process_info_handle, (LPVOID)(addr), c.data(), image_size, &n_bytes) == 0)
     {
         cout << "Read false" << endl;
-        return 0;
+        return;
+    }
+    else
+    {
+        cout << "Read: 0x" << hex << n_bytes << " bytes." << endl;
     }
     cout << hex << (ULONG)(c[0]) << endl;
     cout << hex << (ULONG)(c[1]) << endl;
-    */
 
     CloseHandle(process_info_handle);
+}
+
+int main()
+{
+    test();
+    return 0;
 }

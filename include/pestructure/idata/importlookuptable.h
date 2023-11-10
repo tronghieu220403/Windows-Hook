@@ -17,6 +17,8 @@ namespace pe
         explicit ImportLookupTable(WORD version);
         explicit ImportLookupTable(PUCHAR pe_data, DWORD rva, WORD version);
 
+        DWORD ImportLookupTable::GetFunctionOrdinal(const std::string_view &function_name);
+
         void SetVersion(WORD version);
 
         void SetImportLookupTableData(PUCHAR pe_data, DWORD rva);

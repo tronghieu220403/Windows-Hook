@@ -2,6 +2,17 @@
 
 namespace pe
 {
+    Pe64Memory::Pe64Memory(int pid):
+        process::ProcessMemory(pid)
+    {
+
+    }
+
+    Pe64Memory::Pe64Memory(const std::string_view &process_name):
+        process::ProcessMemory(process_name)
+    {
+
+    }
 
     Pe64Memory::Pe64Memory(const process::ProcessMemory& process_control):
         process::ProcessMemory(process_control)
@@ -30,7 +41,12 @@ namespace pe
 
         iat_rva_ = nt_headers_64_.OptionalHeader.DataDirectory[1].VirtualAddress;
 
-        // Read all data of 
+        // Read all data of pe to _data vector
+        DWORD size = nt_headers_64_.OptionalHeader.SizeOfImage;
+        data_ = ProcessMemory::ReadData(0, size);
+
+        // Create Import Directory Table info field
+        idt_ = std::make_shared<ImportDirectoryTable>(data_, iat_rva_, magic_);
     }
 
     bool Pe64Memory::IsValid()
@@ -48,9 +64,19 @@ namespace pe
         return data_;
     }
 
+    std::shared_ptr<ImportDirectoryTable> Pe64Memory::GetImportDirectoryTable() const
+    {
+        return idt_;
+    }
+
     void Pe64Memory::SetData(const std::vector<UCHAR> data)
     {
         data_ = data;
+    }
+
+    void Pe64Memory::SetImportDirectoryTable(const std::shared_ptr<ImportDirectoryTable> &idt)
+    {
+        idt_ = idt;
     }
 
     DWORD Align(DWORD value, DWORD alignment)

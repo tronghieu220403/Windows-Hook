@@ -2,27 +2,32 @@
 #define IATHOOK_HOOK_IATHOOK_IATHOOK_H_
 
 #include "ulti/everything.h"
-#include "process/processmemory.h"
+#include "pememory/pe64memory.h"
 
 namespace hook
 {
+    typedef void (WINAPI *pCloseHandle) (
+        _In_ HANDLE hObject
+    );
+
     class IatHook
     {
     private:
-        std::shared_ptr<process::ProcessMemory> process_memory_;
+        std::shared_ptr<pe::Pe64Memory> pe_64_memory_;
     public:
 
         IatHook(int pid);
         IatHook(const std::string_view& process_name);
 
-        void HookFunction(const std::string_view& dll_name,
-                            const std::string_view& function_name,
-                            LPVOID old_function_address);
+        ULONGLONG GetFunctionAddressOnIat(const std::string_view& dll_name, const std::string_view& function_name);
         
-        std::shared_ptr<process::ProcessMemory> GetProcessMemory() const;
+        void HookCloseHandle();
+        static void HookedCloseHandle(HANDLE h_object);
+
+        std::shared_ptr<pe::Pe64Memory> GetPeMemory() const;
 
     protected:
-        void SetProcessMemory(const std::shared_ptr<process::ProcessMemory>& process_memory);
+        void SetPeMemory(const std::shared_ptr<pe::Pe64Memory>& pe_64_memory_);
     };
 }
 
