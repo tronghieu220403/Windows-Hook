@@ -12,7 +12,7 @@ namespace pe
         std::vector<ulti::FieldStr> field_str_vector_;
         std::vector<ulti::Field> field_vector_;
         ImportLookupTable import_lookup_table_;
-        WORD version_;
+        WORD version_ = 0;
     public:
 
         ImportDirectoryEntry() = default;

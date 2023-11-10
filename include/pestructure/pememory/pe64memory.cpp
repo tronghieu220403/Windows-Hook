@@ -46,7 +46,7 @@ namespace pe
         data_ = ProcessMemory::ReadData(0, size);
 
         // Create Import Directory Table info field
-        idt_ = std::make_shared<ImportDirectoryTable>(data_, iat_rva_, magic_);
+        idt_ = std::make_shared<ImportDirectoryTable>(data_.data(), iat_rva_, magic_);
     }
 
     bool Pe64Memory::IsValid()

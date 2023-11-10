@@ -91,7 +91,6 @@ void test()
         cout << "New protection: " << "0x" << hex << mem_info.Protect << endl;
     }
 
-    char c[3];
     size_t n_bytes;
     std::vector<UCHAR> c;
     DWORD image_size = 0x00024000;

@@ -2,13 +2,13 @@
 
 namespace pe
 {
-    ImportDirectoryTable::ImportDirectoryTable(PUCHAR pe_data, DWORD rva, WORD version)
+    ImportDirectoryTable::ImportDirectoryTable(PUCHAR pe_data, DWORD rva, WORD version):
+        version_(version)
     {
         if (version != 0x20B && version != 0x10B)
         {
             return;
         }
-        SetVersion(version);
 
         SetImportDirectoryTableData(pe_data, rva);
 

@@ -14,7 +14,7 @@ namespace pe
     public:
 
         ImportDirectoryTable() = default;
-        explicit ImportDirectoryTable(PUCHAR pe_data, DWORD rva, WORD version_);
+        explicit ImportDirectoryTable(PUCHAR pe_data, DWORD rva, WORD version);
 
         void SetVersion(WORD version);
 

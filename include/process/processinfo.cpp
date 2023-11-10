@@ -46,7 +46,7 @@ namespace process
             {
                 module_name.resize(strlen(&module_name[0]));
                 
-                int end_of_device = module_name.find("\\", 0);
+                size_t end_of_device = module_name.find("\\", 0);
                 
                 std::string dos_device_name(10000,'\0');
                 QueryDosDeviceA(module_name.substr(0, end_of_device).data(), &dos_device_name[0], 10000);

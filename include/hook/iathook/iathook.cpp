@@ -19,11 +19,10 @@ namespace hook
         DWORD function_rva = pe_64_memory_->GetImportDirectoryTable()->GetRvaOfFunction(dll_name, function_name);
         if (function_rva == (DWORD)(-1))
         {
-            return;
+            return (ULONGLONG)(-1);
         }
-        ULONGLONG fucntion_va = pe_64_memory_->GetBaseAddress() + function_rva;
 
-        return fucntion_va;
+        return pe_64_memory_->GetBaseAddress() + function_rva;
     }
 
     void IatHook::HookCloseHandle()

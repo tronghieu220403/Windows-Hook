@@ -11,7 +11,7 @@ namespace pe
     private:
         std::vector<ulti::Field> field_vector_;
         HintNameEntry entry_;
-        WORD version_;
+        WORD version_ = 0;
     public:
 
         ImportLookupEntry() = default;

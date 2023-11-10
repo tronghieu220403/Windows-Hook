@@ -10,14 +10,14 @@ namespace pe
     {
     private:
         std::vector<ImportLookupEntry> import_lookup_entry_vector_;
-        WORD version_;
+        WORD version_ = 0;
     public:
 
         ImportLookupTable() = default;
         explicit ImportLookupTable(WORD version);
         explicit ImportLookupTable(PUCHAR pe_data, DWORD rva, WORD version);
 
-        DWORD ImportLookupTable::GetFunctionOrdinal(const std::string_view &function_name);
+        DWORD GetFunctionOrdinal(const std::string_view &function_name);
 
         void SetVersion(WORD version);
 
