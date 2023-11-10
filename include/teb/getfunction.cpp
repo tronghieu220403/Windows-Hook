@@ -1,6 +1,6 @@
 #include "getfunction.h"
 
-void GetFunctionAddresses(const PFuncAddr data)
+inline void GetFunctionAddressesFromTeb(const PFuncAddr data)
 {
     PPEB p_peb = NtCurrentPeb();
 

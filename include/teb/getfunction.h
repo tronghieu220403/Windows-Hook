@@ -3,7 +3,7 @@
 
 #include "teb/function.h"
 
-inline void GetFunctionAddresses(const PFuncAddr data);
+inline void GetFunctionAddressesFromTeb(const PFuncAddr data);
 
 
 #endif

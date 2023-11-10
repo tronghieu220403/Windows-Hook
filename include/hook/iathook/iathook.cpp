@@ -30,12 +30,26 @@ namespace hook
     {
         ULONGLONG address = ulti::MemoryToUint64(pe_64_memory_->ReadData(GetFunctionAddressOnIat("kernel32.dll", "CloseHandle"), 8).data());
 
+        // Get bytes code of "static void HookedCloseHandle(HANDLE h_object)";
+
+        // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
+
+        // Push the bytes code of HookedCloseHandle into that allocated memory.
+
+        // Make the call to that allocated memory in target.
+
         return;
     }
 
     void IatHook::HookedCloseHandle(HANDLE h_object)
     {
-        GetFunctionAddressesFromTeb();
+        FuncAddr iat;
+        GetFunctionAddressesFromTeb(&iat);
+
+        // do something
+
+        iat.fnCloseHandle(h_object);
+        return;
     }
 
     std::shared_ptr<pe::Pe64Memory> IatHook::GetPeMemory() const
