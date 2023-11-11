@@ -5,10 +5,6 @@
 
 namespace hook
 {
-    typedef void (WINAPI *pCloseHandle) (
-        _In_ HANDLE hObject
-    );
-
     class IatHookCloseHandle: public IatHook
     {
     private:
