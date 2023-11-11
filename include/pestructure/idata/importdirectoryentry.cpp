@@ -80,7 +80,7 @@ namespace pe
         {
             return (DWORD)(-1);
         }
-        DWORD iat_rva = field_vector_[4].value;
+        DWORD iat_rva = static_cast<DWORD>(field_vector_[4].value);
         return iat_rva + ordinal * (version_ == 0x20b ? 8 : 4);
     }
 

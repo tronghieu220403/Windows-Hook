@@ -30,9 +30,9 @@ namespace hook
         // Find HookedCloseHandle function ulti we find 48 81 C4 xx xx xx xx C3 (add rsp, xxxxxxxx; ret)
         // The xx xx xx xx can be found in 48 81 EC xx xx xx xx (sub rsp, xxxxxxxx)
         PUCHAR p_hooked_close_handle = (PUCHAR)&IatHookCloseHandle::HookedCloseHandleFunction;
-        ULONGLONG end_addr = 0;
+        size_t end_addr = 0;
         DWORD stack_reserve = (DWORD)(-1);
-        int i = 0;
+        size_t i = 0;
 
         for (i = 0; ; i++)
         {
