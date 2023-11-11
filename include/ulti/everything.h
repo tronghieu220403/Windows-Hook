@@ -35,7 +35,7 @@ namespace ulti
     ULONGLONG MemoryToUint64(const void* data);
     LONGLONG MemoryToInt64(const void* data);
     DWORD MemoryToUint32(const void* data);
-    int MemoryToInt32(const void* data);
+    long MemoryToInt32(const void* data);
     WORD MemoryToUint16(const void* data);
     std::string MemoryToString(const void* data);
     std::wstring MemoryToWstring(const void *data);

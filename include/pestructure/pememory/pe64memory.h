@@ -40,7 +40,7 @@ namespace pe
             bool IsValid();
             bool IsArch64();
 
-            std::vector<UCHAR> GetData() const;
+            std::vector<UCHAR> GetPeData() const;
 
             std::shared_ptr<ImportDirectoryTable> GetImportDirectoryTable() const;
             

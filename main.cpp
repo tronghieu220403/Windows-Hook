@@ -1,17 +1,22 @@
 #include <iostream>
 
-#include "process/processmemory.h"
-#include "pestructure/pememory/pe64memory.h"
-#include "hook/iathook/iathook.h"
+#include "hook/iathook/iathookclosehandle.h"
 
 using namespace std;
 
 int main()
 {
-	hook::IatHook iat_hook("process_sample.exe");
-	cout << hex << iat_hook.GetFunctionAddressOnIat("KERNEL32.dll", "OpenProcess") << endl;
+	hook::IatHookCloseHandle iat_hook_close_handle("process_sample.exe");
+	// cout << hex << iat_hook_close_handle.GetFunctionRvaOnIat("KERNEL32.dll", "CloseHandle") << endl;
+	vector<UCHAR> bytes_code = iat_hook_close_handle.GetBytesCode();
 
-	//cout << p.GetImportDirectoryTable()->GetRvaOfFunction("KERNEL32.dll", "OpenProcess");
-	
+	for (int i = 0; i < bytes_code.size(); i++)
+	{
+		cout << hex << bytes_code[i] << " ";
+		if (i % 16 == 0)
+		{
+			cout << endl;
+		}
+	}
 
 }

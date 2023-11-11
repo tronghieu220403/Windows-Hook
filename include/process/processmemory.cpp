@@ -58,29 +58,44 @@ namespace process
         return VirtualProtectEx(process_control_handle_, (LPVOID)((unsigned long long)GetBaseAddress() + rva), size, new_protection, &old_protect) != 0;
     }
 
-    std::vector<UCHAR> ProcessMemory::ReadData(size_t rva, size_t size)
+    std::vector<UCHAR> ProcessMemory::ReadData(void* virtual_address, size_t size)
     {
         std::vector<UCHAR> buffer(size);
-        if (ReadProcessMemory(process_control_handle_, (LPVOID)(GetBaseAddress() + rva), buffer.data(), size, NULL) == 0)
+        if (ReadProcessMemory(process_control_handle_, (LPVOID)(virtual_address), buffer.data(), size, NULL) == 0)
         {
             return std::vector<UCHAR>();
         }
         return buffer;
     }
 
-    bool ProcessMemory::WriteData(size_t rva, std::vector<UCHAR> data)
+    bool ProcessMemory::WriteData(void* virtual_address, std::vector<UCHAR> data)
     {
-        return ProcessMemory::WriteData(rva, data.data(), data.size());
+        return ProcessMemory::WriteData(virtual_address, data.data(), data.size());
     }
 
-    bool ProcessMemory::WriteData(size_t rva, const PUCHAR data, size_t size)
+    bool ProcessMemory::WriteData(void* virtual_address, const PUCHAR data, size_t size)
     {
         // WriteProcessMemory() internally does change the MemoryProtection to writable if it can not write.
-        if (WriteProcessMemory(process_control_handle_, (LPVOID)(GetBaseAddress() + rva), data, size, NULL) == 0)
+        if (WriteProcessMemory(process_control_handle_, (LPVOID)(virtual_address), data, size, NULL) == 0)
         {
             return false;
         }
         return true;
+    }
+
+    size_t ProcessMemory::GetNearestFreeMemory()
+    {
+        return 0;
+    }
+
+    LPVOID ProcessMemory::MemoryAlloc(size_t size, DWORD protect)
+    {
+        return VirtualAllocEx(process_control_handle_, NULL, size, MEM_COMMIT, protect);;
+    }
+
+    bool ProcessMemory::MemoryFree(LPVOID addr)
+    {
+        return VirtualFreeEx(process_control_handle_, (LPVOID)addr, 0, MEM_RELEASE);
     }
 
     ProcessMemory::~ProcessMemory()

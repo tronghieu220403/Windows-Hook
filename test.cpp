@@ -17,7 +17,7 @@ void test()
 {
     int pid = 1176;
     
-    HANDLE process_info_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid);
+    HANDLE process_info_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, 25328);
     LPVOID base_address = NULL;
 
     string process_name_path(10000, '\0');
@@ -57,7 +57,7 @@ void test()
         }
     }
 
-    cout << "Target base address: 0x" << hex << base_address << endl;
+    cout << "Target base address: " << hex << base_address << endl;
 
     size_t addr = (unsigned long long)base_address + offset;
 
@@ -72,8 +72,16 @@ void test()
         cout << "Query failed: " << GetLastError() << endl;
     }
 
+    LPVOID ptr1 = VirtualAllocEx(process_info_handle, NULL, 0x100, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    cout << hex << (unsigned long long)ptr1 << endl;
+    LPVOID ptr2 = VirtualAllocEx(process_info_handle, NULL, 0x100, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    cout << hex << (unsigned long long)ptr2 << endl;
+    VirtualFreeEx(process_info_handle, ptr1, 0, MEM_RELEASE);
+    VirtualFreeEx(process_info_handle, ptr2, 0, MEM_RELEASE);
+
     // VirtualAllocEx() WriteProcessMemory() and ReadProcessMemory()
 
+    /*
     DWORD lpflOldProtect;
 
     if (VirtualProtectEx(process_info_handle, (LPVOID)addr, 0x1000, PAGE_EXECUTE_READWRITE, &lpflOldProtect) == 0)
@@ -95,7 +103,6 @@ void test()
     std::vector<UCHAR> c;
     DWORD image_size = 0x00024000;
     c.resize(image_size);
-    MEMORY_BASIC_INFORMATION mem_info;
     
     if (ReadProcessMemory(process_info_handle, (LPVOID)(addr), c.data(), image_size, &n_bytes) == 0)
     {
@@ -108,12 +115,13 @@ void test()
     }
     cout << hex << (ULONG)(c[0]) << endl;
     cout << hex << (ULONG)(c[1]) << endl;
-
+    */
     CloseHandle(process_info_handle);
 }
 
 int main()
 {
     test();
+
     return 0;
 }

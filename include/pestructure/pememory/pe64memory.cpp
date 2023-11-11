@@ -22,14 +22,14 @@ namespace pe
 
     void Pe64Memory::ReadPeOnMemory()
     {
-        std::vector<UCHAR> dos_header_data = process::ProcessMemory::ReadData(0, sizeof(IMAGE_DOS_HEADER));
+        std::vector<UCHAR> dos_header_data = process::ProcessMemory::ReadData((void* )ProcessMemory::GetBaseAddress(), sizeof(IMAGE_DOS_HEADER));
         if (dos_header_data.size() != sizeof(IMAGE_DOS_HEADER))
         {
             return;
         }
         DWORD e_lfanew = ((PIMAGE_DOS_HEADER)dos_header_data.data())->e_lfanew;
 
-        std::vector<UCHAR> p_nt_headers_data = process::ProcessMemory::ReadData(e_lfanew, sizeof(IMAGE_NT_HEADERS64));
+        std::vector<UCHAR> p_nt_headers_data = process::ProcessMemory::ReadData((void *)(process::ProcessMemory::GetBaseAddress() + e_lfanew), sizeof(IMAGE_NT_HEADERS64));
 
         magic_ = ((PIMAGE_NT_HEADERS64)p_nt_headers_data.data())->OptionalHeader.Magic;
         if (magic_ != 0x20b)
@@ -43,7 +43,7 @@ namespace pe
 
         // Read all data of pe to _data vector
         DWORD size = nt_headers_64_.OptionalHeader.SizeOfImage;
-        data_ = ProcessMemory::ReadData(0, size);
+        data_ = ProcessMemory::ReadData((void* )ProcessMemory::GetBaseAddress(), size);
 
         // Create Import Directory Table info field
         idt_ = std::make_shared<ImportDirectoryTable>(data_.data(), iat_rva_, magic_);
@@ -59,7 +59,7 @@ namespace pe
         return magic_ == 0x20b;
     }
 
-    std::vector<UCHAR> Pe64Memory::GetData() const
+    std::vector<UCHAR> Pe64Memory::GetPeData() const
     {
         return data_;
     }

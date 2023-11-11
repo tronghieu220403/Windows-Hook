@@ -4,35 +4,27 @@ namespace ulti
 {
     ULONGLONG MemoryToUint64(const void* data)
     {
-        ULONGLONG res = 0;
-        memcpy(&res, data, 8);
-        return res;
+        return *(ULONGLONG *)data;
     }
 
     LONGLONG MemoryToInt64(const void* data)
     {
-        LONGLONG res = 0;
-        memcpy(&res, data, 8);
-        return res;
+        return *(LONGLONG *)data;
     }
 
     DWORD MemoryToUint32(const void* data)
     {
-        DWORD res = 0;
-        memcpy(&res, data, 4);
-        return res;
+        return *(DWORD *)data;
     }
 
-    int MemoryToInt32(const void* data)
+    long MemoryToInt32(const void* data)
     {
-        int res = 0;
-        memcpy(&res, data, 4);
-        return res;
+        return *(long *)data;
     }
 
     WORD MemoryToUint16(const void* data)
     {
-        int res = 0;
+        unsigned int res = 0;
         memcpy(&res, data, 2);
         return res;
     }

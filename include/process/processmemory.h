@@ -29,9 +29,13 @@ namespace process
         DWORD GetMemoryProtection(unsigned long long rva, unsigned long long size);
         bool SetMemoryProtection(unsigned long long rva, unsigned long long size, DWORD new_protection);
 
-        std::vector<UCHAR> ReadData(size_t rva, size_t size);
-        bool WriteData(size_t rva, std::vector<UCHAR> data);
-        bool WriteData(size_t rva, const PUCHAR data, size_t size);
+        std::vector<UCHAR> ReadData(void* virtual_address, size_t size);
+        bool WriteData(void* virtual_address, std::vector<UCHAR> data);
+        bool WriteData(void* virtual_address, const PUCHAR data, size_t size);
+
+        size_t GetNearestFreeMemory();
+        LPVOID MemoryAlloc(size_t size, DWORD protect);
+        bool MemoryFree(LPVOID addr);
 
         ~ProcessMemory();
 
