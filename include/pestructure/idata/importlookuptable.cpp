@@ -23,7 +23,7 @@ namespace pe
             return;
         }
         version_ = version;
-        SetImportLookupTableData(pe_data, rva);
+        ImportLookupTable::SetImportLookupTableData(pe_data, rva);
     }
 
     void ImportLookupTable::SetImportLookupTableData(PUCHAR pe_data, DWORD rva)

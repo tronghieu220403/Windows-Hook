@@ -78,7 +78,7 @@ namespace pe
         DWORD ordinal = import_lookup_table_.GetFunctionOrdinal(function_name);
         if (ordinal == (DWORD)(-1))
         {
-            return (DWORD)(-1);
+            return 0;
         }
         DWORD iat_rva = static_cast<DWORD>(field_vector_[4].value);
         return iat_rva + ordinal * (version_ == 0x20b ? 8 : 4);

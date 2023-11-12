@@ -3,21 +3,17 @@
 namespace process
 {
     ProcessInfo::ProcessInfo(int id):
-        Process(id), 
-        process_info_handle_(OpenProcess(PROCESS_QUERY_INFORMATION | 
-                                            PROCESS_VM_READ, FALSE, 
-                                            Process::GetPid()))
+        Process(id)
     {
-        UpdateBaseAddress();
+        ProcessInfo::OpenProcessInfoHandle();
+        ProcessInfo::UpdateBaseAddress();
     }
 
     ProcessInfo::ProcessInfo(const std::string_view &name):
-        Process(name), 
-        process_info_handle_(OpenProcess(PROCESS_QUERY_INFORMATION | 
-                                            PROCESS_VM_READ, FALSE, 
-                                            Process::GetPid()))
+        Process(name)
     {
-        UpdateBaseAddress();
+        ProcessInfo::OpenProcessInfoHandle();
+        ProcessInfo::UpdateBaseAddress();
     }
 
     size_t ProcessInfo::GetBaseAddress() const
@@ -33,23 +29,27 @@ namespace process
     void ProcessInfo::UpdateBaseAddress()
     {
         Process::UpdatePid();
-        UpdateImageFileName();
-        UpdateProcessModules();
-
-        for (auto handle_module: GetProcessModules())
+        if (Process::GetPid() == 0)
+        {
+            return;
+        }
+        ProcessInfo::UpdateImageFileName();
+        ProcessInfo::UpdateProcessModules();
+        
+        ProcessInfo::SetBaseAddress(0);
+        for (auto handle_module: ProcessInfo::GetProcessModules())
         {
             std::string module_name(10000, '\0');
-            if (GetModuleFileNameExA(
-                        ProcessInfo::GetProcessInfoHandle(), 
-                        handle_module, 
-                        module_name.data(), 10000))
+            if (GetModuleFileNameExA(ProcessInfo::GetProcessInfoHandle(), 
+                                        handle_module, 
+                                        module_name.data(), 10000))
             {
                 module_name.resize(strlen(&module_name[0]));
                 
                 size_t end_of_device = module_name.find("\\", 0);
                 
                 std::string dos_device_name(10000,'\0');
-                QueryDosDeviceA(module_name.substr(0, end_of_device).data(), &dos_device_name[0], 10000);
+                ::QueryDosDeviceA(module_name.substr(0, end_of_device).data(), &dos_device_name[0], 10000);
                 dos_device_name.resize(strlen(&dos_device_name[0]));
 
                 std::string image_module_name = dos_device_name + module_name.substr(end_of_device, module_name.size());
@@ -57,11 +57,10 @@ namespace process
                 if (image_module_name == ProcessInfo::GetImageFileName())
                 {
                     MODULEINFO module_info;
-                    GetModuleInformation(
-                            ProcessInfo::GetProcessInfoHandle(), 
-                            handle_module, 
-                            &module_info, sizeof(MODULEINFO));
-                    SetBaseAddress((size_t)module_info.lpBaseOfDll);
+                    ::GetModuleInformation(ProcessInfo::GetProcessInfoHandle(), 
+                                            handle_module, 
+                                            &module_info, sizeof(MODULEINFO));
+                    ProcessInfo::SetBaseAddress((size_t)module_info.lpBaseOfDll);
                     break;
                 }
             }
@@ -80,8 +79,12 @@ namespace process
 
     void ProcessInfo::UpdateImageFileName()
     {
+        if (Process::GetPid() == 0)
+        {
+            return;
+        }
         image_file_name_.resize(10000);
-        image_file_name_.resize(GetProcessImageFileNameA(process_info_handle_, &image_file_name_[0], 10000));
+        image_file_name_.resize(::GetProcessImageFileNameA(process_info_handle_, &image_file_name_[0], 10000));
     }
 
     std::vector<HMODULE> ProcessInfo::GetProcessModules()
@@ -100,7 +103,7 @@ namespace process
 
         module_list_.resize(10000);
 
-        if (EnumProcessModules(process_info_handle_, module_list_.data(), 10000, &size) == 0)
+        if (::EnumProcessModules(process_info_handle_, module_list_.data(), 10000, &size) == 0)
         {
             return;
         }
@@ -112,23 +115,31 @@ namespace process
         return process_info_handle_;
     }
 
+    void ProcessInfo::OpenProcessInfoHandle()
+    {
+        ProcessInfo::CloseProcessInfoHandle();
+        process_info_handle_ = OpenProcess(PROCESS_QUERY_INFORMATION |
+            PROCESS_VM_READ, FALSE,
+            Process::GetPid());
+    }
+
     void ProcessInfo::CloseProcessInfoHandle()
     {
         if (process_info_handle_ != 0 && process_info_handle_ != (HANDLE)(-1))
         {
-            CloseHandle(process_info_handle_);
+            ::CloseHandle(process_info_handle_);
             process_info_handle_ = 0;
         }
     }
 
     void ProcessInfo::SetProcessInfoHandle(const HANDLE process_info_handle)
     {
-        CloseProcessInfoHandle();
+        ProcessInfo::CloseProcessInfoHandle();
         process_info_handle_ = process_info_handle;
     }
 
     ProcessInfo::~ProcessInfo()
     {
-        CloseProcessInfoHandle();
+        ProcessInfo::CloseProcessInfoHandle();
     }
 }

@@ -11,14 +11,14 @@ namespace process
 	private:
 		size_t base_address_ = 0;
         std::string image_file_name_;
-        HANDLE process_info_handle_;
+        HANDLE process_info_handle_ = 0;
         std::vector<HMODULE> module_list_;
 	public:
 
 		ProcessInfo() = default;
 		explicit ProcessInfo(int id);
 		explicit ProcessInfo(const std::string_view& process_name);
-		
+
         size_t GetBaseAddress() const;
         void UpdateBaseAddress();
 
@@ -29,6 +29,7 @@ namespace process
         void UpdateProcessModules();
 
         HANDLE GetProcessInfoHandle() const;
+        void OpenProcessInfoHandle();
         void CloseProcessInfoHandle();
 
         ~ProcessInfo();

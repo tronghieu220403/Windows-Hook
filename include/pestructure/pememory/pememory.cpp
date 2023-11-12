@@ -5,23 +5,27 @@ namespace pe
     PeMemory::PeMemory(int pid):
         process::ProcessMemory(pid)
     {
-        ReadPeOnMemory();
+        PeMemory::ReadPeOnMemory();
     }
 
     PeMemory::PeMemory(const std::string_view &process_name):
         process::ProcessMemory(process_name)
     {
-        ReadPeOnMemory();
+        PeMemory::ReadPeOnMemory();
     }
 
     PeMemory::PeMemory(const process::ProcessMemory& process_control):
         process::ProcessMemory(process_control)
     {
-        ReadPeOnMemory();
+        PeMemory::ReadPeOnMemory();
     }
 
     void PeMemory::ReadPeOnMemory()
     {
+        if (ProcessMemory::GetBaseAddress() == 0)
+        {
+            return;
+        }
         std::vector<UCHAR> dos_header_data = process::ProcessMemory::ReadData((void* )ProcessMemory::GetBaseAddress(), sizeof(IMAGE_DOS_HEADER));
         if (dos_header_data.size() != sizeof(IMAGE_DOS_HEADER))
         {
@@ -29,7 +33,7 @@ namespace pe
         }
         DWORD e_lfanew = ((PIMAGE_DOS_HEADER)dos_header_data.data())->e_lfanew;
 
-        std::vector<UCHAR> p_nt_headers_data = process::ProcessMemory::ReadData((void *)(process::ProcessMemory::GetBaseAddress() + e_lfanew), sizeof(IMAGE_NT_HEADERS64));
+        std::vector<UCHAR> p_nt_headers_data = process::ProcessMemory::ReadData((void *)(process::ProcessMemory::GetBaseAddress() + e_lfanew), sizeof(IMAGE_NT_HEADERS));
 
         #ifdef _WIN64
             magic_ = ((PIMAGE_NT_HEADERS64)p_nt_headers_data.data())->OptionalHeader.Magic;

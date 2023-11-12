@@ -24,7 +24,7 @@ namespace pe
             return;
         }
         version_ = version;
-        SetImportLookupEntryData(pe_data, rva);
+        ImportLookupEntry::SetImportLookupEntryData(pe_data, rva);
     }
 
     void ImportLookupEntry::SetImportLookupEntryData(PUCHAR pe_data, DWORD rva)

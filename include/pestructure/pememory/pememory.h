@@ -29,7 +29,7 @@ namespace pe
             WORD magic_ = 0;
             DWORD iat_rva_ = 0;
 
-            std::shared_ptr<ImportDirectoryTable> idt_;
+            std::shared_ptr<ImportDirectoryTable> idt_ = std::make_shared< ImportDirectoryTable>();
 
         public:
 

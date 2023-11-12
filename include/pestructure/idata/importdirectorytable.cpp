@@ -10,7 +10,7 @@ namespace pe
             return;
         }
 
-        SetImportDirectoryTableData(pe_data, rva);
+        ImportDirectoryTable::SetImportDirectoryTableData(pe_data, rva);
 
     }
     void ImportDirectoryTable::SetVersion(WORD version)

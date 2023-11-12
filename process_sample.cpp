@@ -6,7 +6,8 @@ int main()
 {
     while(true)
     {
-        CloseHandle(OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, 8272));
+        HANDLE p = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, 10820);
+        CloseHandle(p);
         Sleep(10000);
     }
     return 0;

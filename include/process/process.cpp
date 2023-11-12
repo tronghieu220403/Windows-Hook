@@ -6,7 +6,7 @@ namespace process
 
 	Process::Process(int pid): pid_(pid) {};
 
-	Process::Process(const std::string_view& name): name_(name), pid_(FindProcessByName(name)) {};
+	Process::Process(const std::string_view& name): name_(name), pid_(Process::FindProcessByName(name)) {};
 
 	int Process::GetPid() const{
 		return pid_;
@@ -20,7 +20,7 @@ namespace process
     {
         if (!name_.empty())
         {
-            pid_ = FindProcessByName(name_);
+            pid_ = Process::FindProcessByName(name_);
         }
     };
 
@@ -40,22 +40,22 @@ namespace process
 
         PROCESSENTRY32 entry;
         entry.dwSize = sizeof(PROCESSENTRY32);
-        HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        HANDLE snapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
         std::wstring wsTmp(name.begin(), name.end());
 
-        if (Process32FirstW(snapshot, &entry) == TRUE)
+        if (::Process32FirstW(snapshot, &entry) == TRUE)
         {
             while (Process32Next(snapshot, &entry) == TRUE)
             {
-                if (wcscmp(entry.szExeFile, &wsTmp[0]) == 0)
+                if (::wcscmp(entry.szExeFile, &wsTmp[0]) == 0)
                 {
                     pid = entry.th32ProcessID;
                     break;
                 }
             }
         }
-        CloseHandle(snapshot);
+        ::CloseHandle(snapshot);
         return pid;
 	};
 

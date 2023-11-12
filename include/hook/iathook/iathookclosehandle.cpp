@@ -5,13 +5,13 @@ namespace hook
     IatHookCloseHandle::IatHookCloseHandle(int pid):
         IatHook(pid)
     {
-        SetDefaultBytesCode();
+        IatHookCloseHandle::SetDefaultBytesCode();
     }
 
     IatHookCloseHandle::IatHookCloseHandle(const std::string_view &process_name):
         IatHook(process_name)
     {
-        SetDefaultBytesCode();
+        IatHookCloseHandle::SetDefaultBytesCode();
     }
 
     void IatHookCloseHandle::SetBytesCode(const std::vector<UCHAR> bytes_code)
@@ -26,9 +26,6 @@ namespace hook
 
     void IatHookCloseHandle::SetDefaultBytesCode()
     {
-        // Get bytes code of "static void HookedCloseHandle(HANDLE h_object)";
-        // Find HookedCloseHandle function ulti we find 48 81 C4 xx xx xx xx C3 (add rsp, xxxxxxxx; ret) or 48 81 C4 xx xx xx xx 5B C3 (add rsp, xxxxxxxx; pop rbp; ret)
-        // The xx xx xx xx can be found in 48 81 EC xx xx xx xx (sub rsp, xxxxxxxx)
         #ifdef _DEBUG
             PUCHAR p_hooked_close_handle = (PUCHAR)&IatHookCloseHandle::HookedCloseHandleFunction + 5 + *(DWORD *)((size_t) & IatHookCloseHandle::HookedCloseHandleFunction + 1);
         #else
@@ -36,17 +33,10 @@ namespace hook
         #endif // DEBUG
 
         size_t end_addr = 0;
-        DWORD stack_reserve = (DWORD)(-1);
         size_t i = 0;
 
-        for (i = 0; ; i++)
-        {
-            if ((ulti::MemoryToInt32(p_hooked_close_handle + i) & 0x00ffffff) == (DWORD)0x00ec8148)
-            {
-                stack_reserve = ulti::MemoryToInt32(p_hooked_close_handle + i + 3);
-                break;
-            }
-        }
+        // Get bytes code of "static void HookedCloseHandle(HANDLE h_object)";
+        // Find HookedCloseHandle function ulti we find 5x C3 (pop something; ret)
 
         for (;;i++)
         {
@@ -55,56 +45,57 @@ namespace hook
                 end_addr = i + 2;
                 break;
             }
-            if ((*(char*)(p_hooked_close_handle + i) & 0xff) == 0xc3)
-            {
-                end_addr = i + 1;
-                break;
-            }
-            if ( (ulti::MemoryToInt32(p_hooked_close_handle + i) & 0x00ffffff) == (DWORD)0x00c48148  &&
-                        ulti::MemoryToInt32(p_hooked_close_handle + i + 3) == stack_reserve)
-            {
-                if (*(char *)(p_hooked_close_handle + i + 7) == 0xc3) // ret
-                {
-                    end_addr = i + 8;
-                    break;
-                }
-                else if (*(char*)(p_hooked_close_handle + i + 8) == 0xc3 && *(char*)(p_hooked_close_handle + i + 7) == 0x5b)    // pop rbp ; ret
-                {
-                    end_addr = i + 9;
-                    break;
-                }
-            }
         }
 
         bytes_code_.clear();
         bytes_code_.resize(end_addr);
-        memcpy(bytes_code_.data(), p_hooked_close_handle, end_addr);
+        ::memcpy(bytes_code_.data(), p_hooked_close_handle, end_addr);
     }
 
     void IatHookCloseHandle::HookCloseHandle()
     {
         std::shared_ptr<pe::PeMemory> pe_memory = IatHook::GetPeMemory();
 
-        LPVOID va_close_handle_iat = (void *)(pe_memory->GetBaseAddress() + GetFunctionRvaOnIat("kernel32.dll", "CloseHandle"));
+        if (pe_memory->GetBaseAddress() == 0)
+        {
+            return;
+        }
+
+        LPVOID va_close_handle_iat = (void *)(IatHook::GetVirutalAddressOfFunctionOnIat("KERNEL32.dll", "CloseHandle"));
+
+        if (va_close_handle_iat == NULL)
+        {
+            return;
+        }
 
         #ifdef _WIN64
-            size_t address = ulti::MemoryToUint64(pe_memory->ReadData(va_close_handle_iat, 8).data());
+            size_t address = ulti::MemoryToUint64(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, 8).data());
         #elif _WIN32
-            size_t address = ulti::MemoryToUint32(pe_memory->ReadData(va_close_handle_iat, 4).data());
+            size_t address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, 4).data());
         #endif
 
         // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
-        LPVOID code_ptr = pe_memory->MemoryAlloc(bytes_code_.size(), PAGE_EXECUTE_READWRITE);
+        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(bytes_code_.size(), PAGE_EXECUTE_READWRITE);
 
         // Push the bytes code of HookedCloseHandle into that allocated memory.
-        pe_memory->WriteData(code_ptr, bytes_code_);
+        if (pe_memory->ProcessMemory::WriteData(code_ptr, bytes_code_) == false)
+        {
+            return;
+        }
 
         // Replace the CloseHandle() address by code_ptr in va_close_handle_iat
         #ifdef _WIN64
-            pe_memory->WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 8);
+        if (pe_memory->ProcessMemory::WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 8) == false)
+        {
+            std::cout << GetLastError() << std::endl;
+            return;
+        }
         #elif _WIN32
-            pe_memory->WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 4);
-        #endif
+        if (pe_memory->ProcessMemory::WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 4) == false)
+        {
+            return;
+        }
+#endif
 
         return;
     }
@@ -112,10 +103,9 @@ namespace hook
     void IatHookCloseHandle::HookedCloseHandleFunction(HANDLE h_object)
     {
         FuncAddr iat;
-        char c[5];
-        c[0] = 'g';
-        c[1] = 'g';
-        c[2] = '\n';
+        char endline[1];
+        endline[0] = '\n';
+
         DWORD bytes_written = 0;
         PPEB p_peb = NtCurrentPeb();
 
@@ -318,9 +308,35 @@ namespace hook
 
         }
 
-        iat.fnWriteConsoleA(iat.fnGetStdHandle(STD_OUTPUT_HANDLE), c, 3, &bytes_written, NULL);
+        HANDLE std_output_handle = iat.fnGetStdHandle(STD_OUTPUT_HANDLE);
 
-        // do something
+        size_t value = (size_t)h_object;
+        
+        char number[20];
+        for (int i = 0; i < 20; i++)
+        {
+            number[i] = '\0';
+        }
+        int size = 0;
+        while (value > 0)
+        {
+            number[19 - size] = '0' + value % 10;
+            size++;
+            value = value / 10;
+        }
+        if (size == 0)
+        {
+            size = 1;
+            number[19] = '0';
+        }
+
+        iat.fnWriteConsoleA(std_output_handle, number + 20 - size, size, &bytes_written, NULL);
+        iat.fnWriteConsoleA(std_output_handle, endline, 1, &bytes_written, NULL);
+
+        for (int i = 0; i < 20; i++)
+        {
+            number[i] = '\0';
+        }
 
         iat.fnCloseHandle(h_object);
         return;

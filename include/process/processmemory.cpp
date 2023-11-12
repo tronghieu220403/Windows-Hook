@@ -6,31 +6,31 @@ namespace process
     ProcessMemory::ProcessMemory(int pid):
         ProcessInfo(pid)
     {
-        OpenProcessControlHandle();
+        ProcessMemory::OpenProcessControlHandle();
     }
 
     ProcessMemory::ProcessMemory(const std::string_view &process_name):
         ProcessInfo(process_name)
     {
-        OpenProcessControlHandle();
+        ProcessMemory::OpenProcessControlHandle();
     }
 
     ProcessMemory::ProcessMemory(const ProcessInfo &process_info):
         ProcessInfo(process_info)
     {
-        OpenProcessControlHandle();
+        ProcessMemory::OpenProcessControlHandle();
     }
 
     void ProcessMemory::OpenProcessControlHandle()
     {
-        process_control_handle_ = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, GetPid());
+        process_control_handle_ = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, GetPid());
     }
 
     void ProcessMemory::CloseProcessControlHandle()
     {
         if (process_control_handle_ != NULL && process_control_handle_ != (HANDLE)(-1))
         {
-            CloseHandle(process_control_handle_);
+            ::CloseHandle(process_control_handle_);
             process_control_handle_ = NULL;
         }
     }
@@ -40,11 +40,11 @@ namespace process
         return process_control_handle_;
     }
 
-    DWORD ProcessMemory::GetMemoryProtection(size_t rva, size_t size)
+    DWORD ProcessMemory::GetMemoryProtection(void* virtual_address, size_t size)
     {
         MEMORY_BASIC_INFORMATION mem_info = { 0 };
 
-        if (VirtualQueryEx(process_control_handle_, (LPVOID)(GetBaseAddress() + rva), &mem_info, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
+        if (::VirtualQueryEx(process_control_handle_, (LPVOID)(virtual_address), &mem_info, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
         {
             return mem_info.Protect;
         }
@@ -52,16 +52,16 @@ namespace process
         return 0;
     }
 
-    bool ProcessMemory::SetMemoryProtection(size_t rva, size_t size, DWORD new_protection)
+    bool ProcessMemory::SetMemoryProtection(void* virtual_address, size_t size, DWORD new_protection)
     {
         DWORD old_protect;
-        return VirtualProtectEx(process_control_handle_, (LPVOID)(GetBaseAddress() + rva), size, new_protection, &old_protect) != 0;
+        return ::VirtualProtectEx(process_control_handle_, (LPVOID)(virtual_address), size, new_protection, &old_protect) != 0;
     }
 
     std::vector<UCHAR> ProcessMemory::ReadData(void* virtual_address, size_t size)
     {
         std::vector<UCHAR> buffer(size);
-        if (ReadProcessMemory(process_control_handle_, (LPVOID)(virtual_address), buffer.data(), size, NULL) == 0)
+        if (::ReadProcessMemory(process_control_handle_, (LPVOID)(virtual_address), buffer.data(), size, NULL) == 0)
         {
             return std::vector<UCHAR>();
         }
@@ -76,36 +76,68 @@ namespace process
     bool ProcessMemory::WriteData(void* virtual_address, const PUCHAR data, size_t size)
     {
         // WriteProcessMemory() internally does change the MemoryProtection to writable if it can not write.
-        if (WriteProcessMemory(process_control_handle_, (LPVOID)(virtual_address), data, size, NULL) == 0)
+
+        // First attempt
+        if (::WriteProcessMemory(process_control_handle_, (LPVOID)(virtual_address), data, size, NULL) != 0)
+        {
+            return true;
+        }
+
+        // Second attempt.
+        // Howerver, we must change it manually due to some race condition: https://devblogs.microsoft.com/oldnewthing/20190729-00/?p=102737
+        DWORD old_protection = ProcessMemory::GetMemoryProtection(virtual_address, size);
+        DWORD new_proctection = 0;
+        switch (old_protection)
+        {
+        case PAGE_EXECUTE_READ:
+            new_proctection = PAGE_EXECUTE_READWRITE;
+            break;
+        case PAGE_READONLY:
+            new_proctection = PAGE_READWRITE;
+            break;
+        case PAGE_EXECUTE_READWRITE:
+            new_proctection = old_protection;
+            break;
+        case PAGE_READWRITE:
+            new_proctection = old_protection;
+            break;
+        default:
+            break;
+        }
+
+        if (new_proctection == 0)
         {
             return false;
         }
-        return true;
-    }
 
-    size_t ProcessMemory::GetNearestFreeMemory()
-    {
-        return 0;
+        ProcessMemory::SetMemoryProtection(virtual_address, size, new_proctection);
+        if (::WriteProcessMemory(process_control_handle_, (LPVOID)(virtual_address), data, size, NULL) == 0)
+        {
+            ProcessMemory::SetMemoryProtection(virtual_address, size, old_protection);
+            return false;
+        }
+        ProcessMemory::SetMemoryProtection(virtual_address, size, old_protection);
+        return true;
     }
 
     LPVOID ProcessMemory::MemoryAlloc(size_t size, DWORD protect)
     {
-        return VirtualAllocEx(process_control_handle_, NULL, size, MEM_COMMIT, protect);;
+        return ::VirtualAllocEx(process_control_handle_, NULL, size, MEM_COMMIT, protect);;
     }
 
     bool ProcessMemory::MemoryFree(LPVOID addr)
     {
-        return VirtualFreeEx(process_control_handle_, (LPVOID)addr, 0, MEM_RELEASE);
+        return ::VirtualFreeEx(process_control_handle_, (LPVOID)addr, 0, MEM_RELEASE);
     }
 
     ProcessMemory::~ProcessMemory()
     {
-        CloseProcessControlHandle();
+        ProcessMemory::CloseProcessControlHandle();
     }
 
     void ProcessMemory::SetProcessControlHandle(HANDLE process_control_handle)
     {
-        CloseProcessControlHandle();
+        ProcessMemory::CloseProcessControlHandle();
         process_control_handle_ = process_control_handle;
     }
 }

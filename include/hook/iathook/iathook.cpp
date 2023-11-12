@@ -14,15 +14,15 @@ namespace hook
 
     }
 
-    size_t IatHook::GetFunctionRvaOnIat(const std::string_view &dll_name, const std::string_view &function_name)
+    size_t IatHook::GetVirutalAddressOfFunctionOnIat(const std::string_view &dll_name, const std::string_view &function_name)
     {
-        DWORD function_rva = pe_memory_->GetImportDirectoryTable()->GetRvaOfFunction(dll_name, function_name);
-        if (function_rva == (DWORD)(-1))
+        DWORD function_rva = pe_memory_->PeMemory::GetImportDirectoryTable()->ImportDirectoryTable::GetRvaOfFunction(dll_name, function_name);
+        if (function_rva == 0)
         {
-            return (size_t)(-1);
+            return 0;
         }
 
-        return pe_memory_->GetBaseAddress() + function_rva;
+        return pe_memory_->ProcessInfo::GetBaseAddress() + function_rva;
     }
 
 

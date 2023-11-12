@@ -4,7 +4,7 @@ namespace pe
 {
     HintNameEntry::HintNameEntry(PUCHAR pe_data, DWORD rva)
     {
-        SetHintNameEntry(pe_data, rva);
+        HintNameEntry::SetHintNameEntry(pe_data, rva);
     }
 
     void HintNameEntry::SetHintNameEntry(PUCHAR pe_data, DWORD rva)

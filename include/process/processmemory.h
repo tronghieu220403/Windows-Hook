@@ -25,14 +25,13 @@ namespace process
         void CloseProcessControlHandle();
         HANDLE GetProcessControlHandle() const;
 
-        DWORD GetMemoryProtection(size_t rva, size_t size);
-        bool SetMemoryProtection(size_t rva, size_t size, DWORD new_protection);
+        DWORD GetMemoryProtection(void* virtual_address, size_t size);
+        bool SetMemoryProtection(void* virtual_address, size_t size, DWORD new_protection);
 
         std::vector<UCHAR> ReadData(void* virtual_address, size_t size);
         bool WriteData(void* virtual_address, std::vector<UCHAR> data);
         bool WriteData(void* virtual_address, const PUCHAR data, size_t size);
 
-        size_t GetNearestFreeMemory();
         LPVOID MemoryAlloc(size_t size, DWORD protect);
         bool MemoryFree(LPVOID addr);
 

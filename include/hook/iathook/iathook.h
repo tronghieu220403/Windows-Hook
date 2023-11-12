@@ -16,7 +16,7 @@ namespace hook
         IatHook(int pid);
         IatHook(const std::string_view& process_name);
 
-        size_t GetFunctionRvaOnIat(const std::string_view& dll_name, const std::string_view& function_name);
+        size_t GetVirutalAddressOfFunctionOnIat(const std::string_view& dll_name, const std::string_view& function_name);
         
         std::shared_ptr<pe::PeMemory> GetPeMemory() const;
 
