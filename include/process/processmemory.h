@@ -10,7 +10,6 @@ namespace process
     {
 	private:
     
-		ULONGLONG base_address_ = 0;
         std::string image_file_name_;
         HANDLE process_control_handle_ = 0;
         std::vector<HMODULE> module_list_;
@@ -26,8 +25,8 @@ namespace process
         void CloseProcessControlHandle();
         HANDLE GetProcessControlHandle() const;
 
-        DWORD GetMemoryProtection(unsigned long long rva, unsigned long long size);
-        bool SetMemoryProtection(unsigned long long rva, unsigned long long size, DWORD new_protection);
+        DWORD GetMemoryProtection(size_t rva, size_t size);
+        bool SetMemoryProtection(size_t rva, size_t size, DWORD new_protection);
 
         std::vector<UCHAR> ReadData(void* virtual_address, size_t size);
         bool WriteData(void* virtual_address, std::vector<UCHAR> data);

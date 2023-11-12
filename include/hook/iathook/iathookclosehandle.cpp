@@ -52,12 +52,12 @@ namespace hook
         {
             if (((*(char*)(p_hooked_close_handle + i + 1) & 0xff) == 0xc3 && (*(char*)(p_hooked_close_handle + i) & 0xf0) == 0x50))
             {
-                end_addr = i + 1;
+                end_addr = i + 2;
                 break;
             }
             if ((*(char*)(p_hooked_close_handle + i) & 0xff) == 0xc3)
             {
-                end_addr = i;
+                end_addr = i + 1;
                 break;
             }
             if ( (ulti::MemoryToInt32(p_hooked_close_handle + i) & 0x00ffffff) == (DWORD)0x00c48148  &&
@@ -77,27 +77,35 @@ namespace hook
         }
 
         bytes_code_.clear();
-        bytes_code_.resize(i);
-        memcpy(bytes_code_.data(), p_hooked_close_handle, i);
+        bytes_code_.resize(end_addr);
+        memcpy(bytes_code_.data(), p_hooked_close_handle, end_addr);
     }
 
     void IatHookCloseHandle::HookCloseHandle()
     {
-        std::shared_ptr<pe::Pe64Memory> pe_64_memory = IatHook::GetPeMemory();
+        std::shared_ptr<pe::PeMemory> pe_memory = IatHook::GetPeMemory();
 
-        LPVOID va_close_handle_iat = (void *)(pe_64_memory->GetBaseAddress() + GetFunctionRvaOnIat("kernel32.dll", "CloseHandle"));
+        LPVOID va_close_handle_iat = (void *)(pe_memory->GetBaseAddress() + GetFunctionRvaOnIat("kernel32.dll", "CloseHandle"));
 
-        ULONGLONG address = ulti::MemoryToUint64(pe_64_memory->ReadData(va_close_handle_iat, 8).data());
-
+        #ifdef _WIN64
+            size_t address = ulti::MemoryToUint64(pe_memory->ReadData(va_close_handle_iat, 8).data());
+        #elif _WIN32
+            size_t address = ulti::MemoryToUint32(pe_memory->ReadData(va_close_handle_iat, 4).data());
+        #endif
 
         // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
-        LPVOID code_ptr = pe_64_memory->MemoryAlloc(bytes_code_.size(), PAGE_EXECUTE_READWRITE);
+        LPVOID code_ptr = pe_memory->MemoryAlloc(bytes_code_.size(), PAGE_EXECUTE_READWRITE);
 
         // Push the bytes code of HookedCloseHandle into that allocated memory.
-        pe_64_memory->WriteData(code_ptr, bytes_code_);
+        pe_memory->WriteData(code_ptr, bytes_code_);
 
         // Replace the CloseHandle() address by code_ptr in va_close_handle_iat
-        pe_64_memory->WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 8);
+        #ifdef _WIN64
+            pe_memory->WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 8);
+        #elif _WIN32
+            pe_memory->WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 4);
+        #endif
+
         return;
     }
 

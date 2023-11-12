@@ -15,14 +15,17 @@ namespace pe
         std::vector<UCHAR> data;
     };
 
-    class Pe64Memory: public process::ProcessMemory
+    class PeMemory: public process::ProcessMemory
     {
         private:
             std::vector<UCHAR> data_;
 
             DWORD entry_point_;
-            
-            IMAGE_NT_HEADERS64 nt_headers_64_ = {0};
+            #ifdef _WIN64
+                IMAGE_NT_HEADERS64 nt_headers_64_ = {0};
+            #elif _WIN32
+                IMAGE_NT_HEADERS32 nt_headers_32_ = {0};
+            #endif
             WORD magic_ = 0;
             DWORD iat_rva_ = 0;
 
@@ -30,10 +33,10 @@ namespace pe
 
         public:
 
-            Pe64Memory() = default;
-            Pe64Memory(int pid);;
-            Pe64Memory(const std::string_view& process_name);
-            Pe64Memory(const process::ProcessMemory& process_memory);
+            PeMemory() = default;
+            PeMemory(int pid);;
+            PeMemory(const std::string_view& process_name);
+            PeMemory(const process::ProcessMemory& process_memory);
 
             void ReadPeOnMemory();
 

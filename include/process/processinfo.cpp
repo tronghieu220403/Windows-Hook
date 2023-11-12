@@ -20,12 +20,12 @@ namespace process
         UpdateBaseAddress();
     }
 
-    unsigned long long ProcessInfo::GetBaseAddress() const
+    size_t ProcessInfo::GetBaseAddress() const
     {
         return base_address_;
     }
 
-    void ProcessInfo::SetBaseAddress(unsigned long long base_address)
+    void ProcessInfo::SetBaseAddress(size_t base_address)
     {
         base_address_ = base_address;
     }
@@ -61,7 +61,7 @@ namespace process
                             ProcessInfo::GetProcessInfoHandle(), 
                             handle_module, 
                             &module_info, sizeof(MODULEINFO));
-                    SetBaseAddress((unsigned long long)module_info.lpBaseOfDll);
+                    SetBaseAddress((size_t)module_info.lpBaseOfDll);
                     break;
                 }
             }

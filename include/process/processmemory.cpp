@@ -40,7 +40,7 @@ namespace process
         return process_control_handle_;
     }
 
-    DWORD ProcessMemory::GetMemoryProtection(unsigned long long rva, unsigned long long size)
+    DWORD ProcessMemory::GetMemoryProtection(size_t rva, size_t size)
     {
         MEMORY_BASIC_INFORMATION mem_info = { 0 };
 
@@ -52,10 +52,10 @@ namespace process
         return 0;
     }
 
-    bool ProcessMemory::SetMemoryProtection(unsigned long long rva, unsigned long long size, DWORD new_protection)
+    bool ProcessMemory::SetMemoryProtection(size_t rva, size_t size, DWORD new_protection)
     {
         DWORD old_protect;
-        return VirtualProtectEx(process_control_handle_, (LPVOID)((unsigned long long)GetBaseAddress() + rva), size, new_protection, &old_protect) != 0;
+        return VirtualProtectEx(process_control_handle_, (LPVOID)(GetBaseAddress() + rva), size, new_protection, &old_protect) != 0;
     }
 
     std::vector<UCHAR> ProcessMemory::ReadData(void* virtual_address, size_t size)

@@ -15,7 +15,7 @@ inline void GetFunctionAddressesFromTeb(const PFuncAddr data)
 
     while (ldr != 0)
     {
-        wchar_t* dll_name = (wchar_t*)(((UNICODE_STRING*)((unsigned long long)(ldr) + sizeof(PVOID) * 11))->Buffer);
+        wchar_t* dll_name = (wchar_t*)(((UNICODE_STRING*)((size_t)(ldr) + sizeof(PVOID) * 11))->Buffer);
 
         if (dll_name == NULL) break;
         //wcout << dll_name << endl;

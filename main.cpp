@@ -12,7 +12,7 @@ int main()
 
 	for (int i = 0; i < bytes_code.size(); i++)
 	{
-		cout << hex << bytes_code[i] << " ";
+		cout << hex << (unsigned int)bytes_code[i] << " ";
 		if (i % 16 == 0)
 		{
 			cout << endl;

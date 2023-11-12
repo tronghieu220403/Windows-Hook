@@ -9,7 +9,7 @@ namespace process
 	class ProcessInfo: public Process 
     {
 	private:
-		unsigned long long base_address_ = 0;
+		size_t base_address_ = 0;
         std::string image_file_name_;
         HANDLE process_info_handle_;
         std::vector<HMODULE> module_list_;
@@ -19,7 +19,7 @@ namespace process
 		explicit ProcessInfo(int id);
 		explicit ProcessInfo(const std::string_view& process_name);
 		
-        unsigned long long GetBaseAddress() const;
+        size_t GetBaseAddress() const;
         void UpdateBaseAddress();
 
         std::string GetImageFileName() const;
@@ -34,7 +34,7 @@ namespace process
         ~ProcessInfo();
 
     protected:
-        void SetBaseAddress(unsigned long long base_address);
+        void SetBaseAddress(size_t base_address);
         void SetImageFileName(const std::string_view& image_file_name);
         void SetProcessModules(const std::vector<HMODULE> module_list);
         void SetProcessInfoHandle(const HANDLE process_info_handle);

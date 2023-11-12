@@ -57,7 +57,7 @@ void test()
         }
     }
 
-    cout << "Target base address: " << hex << base_address << endl;
+    cout << "Target base address: 0x" << hex << base_address << endl;
 
     size_t addr = (unsigned long long)base_address + offset;
 
@@ -71,13 +71,6 @@ void test()
     {
         cout << "Query failed: " << GetLastError() << endl;
     }
-
-    LPVOID ptr1 = VirtualAllocEx(process_info_handle, NULL, 0x100, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    cout << hex << (unsigned long long)ptr1 << endl;
-    LPVOID ptr2 = VirtualAllocEx(process_info_handle, NULL, 0x100, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    cout << hex << (unsigned long long)ptr2 << endl;
-    VirtualFreeEx(process_info_handle, ptr1, 0, MEM_RELEASE);
-    VirtualFreeEx(process_info_handle, ptr2, 0, MEM_RELEASE);
 
     // VirtualAllocEx() WriteProcessMemory() and ReadProcessMemory()
 
@@ -121,7 +114,13 @@ void test()
 
 int main()
 {
-    test();
+    //test();
+
+    ULONGLONG addr1 = (ULONGLONG)&main;
+
+    cout << hex << (ULONGLONG)addr1 << endl;
+    PCHAR addr2 = (PCHAR)&main;
+    cout << hex << (ULONGLONG)addr2 << endl;
 
     return 0;
 }
