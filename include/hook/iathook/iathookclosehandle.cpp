@@ -14,16 +14,6 @@ namespace hook
         IatHookCloseHandle::SetDefaultBytesCode();
     }
 
-    void IatHookCloseHandle::SetBytesCode(const std::vector<UCHAR> bytes_code)
-    {
-        bytes_code_ = bytes_code;
-    }
-
-    std::vector<UCHAR> IatHookCloseHandle::GetBytesCode() const
-    {
-        return bytes_code_;
-    }
-
     void IatHookCloseHandle::SetDefaultBytesCode()
     {
         #ifdef _DEBUG
@@ -47,21 +37,23 @@ namespace hook
             }
         }
 
-        bytes_code_.clear();
-        bytes_code_.resize(end_addr);
-        ::memcpy(bytes_code_.data(), p_hooked_close_handle, end_addr);
+        std::vector<UCHAR> bytes_code;
+        bytes_code.resize(end_addr);
+        ::memcpy(bytes_code.data(), p_hooked_close_handle, end_addr);
+        Hook::SetBytesCode(bytes_code);
     }
 
     void IatHookCloseHandle::HookCloseHandle()
     {
         std::shared_ptr<pe::PeMemory> pe_memory = IatHook::GetPeMemory();
+        std::vector<UCHAR> bytes_code = Hook::GetBytesCode();
 
         if (pe_memory->GetBaseAddress() == 0)
         {
             return;
         }
 
-        LPVOID va_close_handle_iat = (void *)(IatHook::GetVirutalAddressOfFunctionOnIat("KERNEL32.dll", "CloseHandle"));
+        LPVOID va_close_handle_iat = (void *)(Hook::GetVirutalAddressOfFunctionOnIat("KERNEL32.dll", "CloseHandle"));
 
         if (va_close_handle_iat == NULL)
         {
@@ -75,10 +67,10 @@ namespace hook
         #endif
 
         // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
-        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(bytes_code_.size(), PAGE_EXECUTE_READWRITE);
+        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(bytes_code.size(), PAGE_EXECUTE_READWRITE);
 
         // Push the bytes code of HookedCloseHandle into that allocated memory.
-        if (pe_memory->ProcessMemory::WriteData(code_ptr, bytes_code_) == false)
+        if (pe_memory->ProcessMemory::WriteData(code_ptr, bytes_code) == false)
         {
             return;
         }

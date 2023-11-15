@@ -1,5 +1,5 @@
-#ifndef IATHOOK_PROCESS_PROCESS_H_
-#define IATHOOK_PROCESS_PROCESS_H_
+#ifndef USERMODEHOOK_PROCESS_PROCESS_H_
+#define USERMODEHOOK_PROCESS_PROCESS_H_
 
 #include "ulti/everything.h"
 

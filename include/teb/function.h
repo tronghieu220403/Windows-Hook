@@ -1,5 +1,5 @@
-#ifndef IATHOOK_TEB_FUNCTION_H_
-#define IATHOOK_TEB_FUNCTION_H_
+#ifndef USERMODEHOOK_TEB_FUNCTION_H_
+#define USERMODEHOOK_TEB_FUNCTION_H_
 
 #include "ulti/everything.h"
 #include "teb/teb.h"

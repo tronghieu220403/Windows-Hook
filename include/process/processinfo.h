@@ -1,5 +1,5 @@
-#ifndef IATHOOK_PROCESS_PROCESSINFO_H_
-#define IATHOOK_PROCESS_PROCESSINFO_H_
+#ifndef USERMODEHOOK_PROCESS_PROCESSINFO_H_
+#define USERMODEHOOK_PROCESS_PROCESSINFO_H_
 
 #include "process/process.h"
 #include "ulti/everything.h"
