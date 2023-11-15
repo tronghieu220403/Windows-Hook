@@ -3,7 +3,7 @@
 
 #include "teb/function.h"
 
-inline void GetFunctionAddressesFromTeb(const PFuncAddr data)
+FORCEINLINE void GetFunctionAddressesFromTeb(const PFuncAddr data)
 {
     PPEB p_peb = NtCurrentPeb();
 
