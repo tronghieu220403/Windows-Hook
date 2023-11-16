@@ -80,6 +80,8 @@ We need to allocate a heap with `PAGE_EXECUTE_READWRITE` protection attributes, 
 
 * Hooked function: modify instruction of the code by **replace some first line of the hooked function** by your `jmp` instruction to the hooking function.
 
+More detail in here: [Manually Implementing Inline Function Hooking](https://blog.securehat.co.uk/process-injection/manually-implementing-inline-function-hooking)
+
 Folder structure
 ----------------
 ```
