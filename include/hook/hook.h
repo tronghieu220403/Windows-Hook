@@ -21,8 +21,9 @@ namespace hook
         
         std::shared_ptr<pe::PeMemory> GetPeMemory() const;
 
-        void SetBytesCode(const std::vector<UCHAR> bytes_code);
-        std::vector<UCHAR> GetBytesCode() const;
+        void SetHookingBytesCode(const PVOID function_address);
+        void SetHookingBytesCode(const std::vector<UCHAR> bytes_code);
+        std::vector<UCHAR> GetHookingBytesCode() const;
 
     protected:
         void SetPeMemory(const std::shared_ptr<pe::PeMemory>& pe_64_memory_);

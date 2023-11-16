@@ -31,12 +31,39 @@ namespace hook
         return pe_memory_;
     }
 
-    void Hook::SetBytesCode(const std::vector<UCHAR> bytes_code)
+    void Hook::SetHookingBytesCode(PVOID function_address)
+    {
+        #ifdef _DEBUG
+            PUCHAR p_hooked_close_handle = (PUCHAR)function_address + 5 + *(DWORD *)((size_t)function_address + 1);
+        #else
+            PUCHAR p_hooked_close_handle = (PUCHAR)function_address;
+        #endif // DEBUG
+
+        size_t end_addr = 0;
+        size_t i = 0;
+
+        // Get bytes code of "static void HookedCloseHandle(HANDLE h_object)";
+        // Find HookedCloseHandle function ulti we find 5x C3 (pop something; ret)
+
+        for (;;i++)
+        {
+            if (((*(char*)(p_hooked_close_handle + i + 1) & 0xff) == 0xc3 && (*(char*)(p_hooked_close_handle + i) & 0xf0) == 0x50))
+            {
+                end_addr = i + 2;
+                break;
+            }
+        }
+
+        bytes_code_.resize(end_addr);
+        ::memcpy(bytes_code_.data(), p_hooked_close_handle, end_addr);
+    }
+
+    void Hook::SetHookingBytesCode(const std::vector<UCHAR> bytes_code)
     {
         bytes_code_ = bytes_code;
     }
 
-    std::vector<UCHAR> Hook::GetBytesCode() const
+    std::vector<UCHAR> Hook::GetHookingBytesCode() const
     {
         return bytes_code_;
     }

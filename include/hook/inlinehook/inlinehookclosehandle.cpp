@@ -16,37 +16,12 @@ namespace hook
 
     void InlineHookCloseHandle::SetDefaultBytesCode()
     {
-        #ifdef _DEBUG
-            PUCHAR p_hooked_close_handle = (PUCHAR)&InlineHookCloseHandle::HookedCloseHandleFunction + 5 + *(DWORD *)((size_t) & InlineHookCloseHandle::HookedCloseHandleFunction + 1);
-        #else
-            PUCHAR p_hooked_close_handle = (PUCHAR)&InlineHookCloseHandle::HookedCloseHandleFunction;
-        #endif // DEBUG
-
-        size_t end_addr = 0;
-        size_t i = 0;
-
-        // Get bytes code of "static void HookedCloseHandle(HANDLE h_object)";
-        // Find HookedCloseHandle function ulti we find 5x C3 (pop something; ret)
-
-        for (;;i++)
-        {
-            if (((*(char*)(p_hooked_close_handle + i + 1) & 0xff) == 0xc3 && (*(char*)(p_hooked_close_handle + i) & 0xf0) == 0x50))
-            {
-                end_addr = i + 2;
-                break;
-            }
-        }
-
-        std::vector<UCHAR> bytes_code;
-        bytes_code.resize(end_addr);
-        ::memcpy(bytes_code.data(), p_hooked_close_handle, end_addr);
-        Hook::SetBytesCode(bytes_code);
+        InlineHook::SetHookingBytesCode((PVOID)(&InlineHookCloseHandle::HookedCloseHandleFunction));
     }
 
     void InlineHookCloseHandle::HookCloseHandle()
     {
         std::shared_ptr<pe::PeMemory> pe_memory = InlineHook::GetPeMemory();
-        std::vector<UCHAR> bytes_code = Hook::GetBytesCode();
 
         if (pe_memory->GetBaseAddress() == 0)
         {
@@ -60,46 +35,29 @@ namespace hook
             return;
         }
 
-        #ifdef _WIN64
-            size_t function_address = ulti::MemoryToUint64(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, 8).data());
-        #elif _WIN32
-            size_t function_address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, 4).data());
-        #endif
+        size_t function_address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
 
-        // Modify jump at the end of the hooking function to jump to somewhere in CloseHandle, 
-        // must try to replace some of the ending line of the hooking function to conserse the flow of code since some first line of CloseHandle has been replaced by the push hooking_function_address; ret; nop * x
-        // Since jump do not allow any value greater than max of DWORD -> use push address_ptr; ret
-        #ifdef _WIN64
-            std::vector<UCHAR> jmp_bytes_code_hooking_function(9); // 1 for push opcode, 8 for address_ptr, 1 for ret
-        #elif _WIN32
-            std::vector<UCHAR> jmp_bytes_code_hooking_function(5); // 1 for push opcode, 4 for address_ptr, 1 for ret
-        #endif
+        // Look at the address of CloseHandle in kernel32.dll, since the function is inherited from an other DLL so the instruction at that address in kernel32 is always be "jmp [some address]"
 
-        int x = 0; // modify this value
+        // For this case (same case for many other functions that are inherited from other DLLs), we only need to find the exact value of "some address" in the instruction above and then jump to it at the end of the hooking function.
 
-        std::vector<UCHAR> edited_bytes_code;
-        std::copy(bytes_code.begin(), bytes_code.end() - x, std::back_inserter(edited_bytes_code));
-        std::copy(jmp_bytes_code_hooking_function.begin(), jmp_bytes_code_hooking_function.end(), std::back_inserter(edited_bytes_code));
+        size_t real_close_handle_virtual_address = *(size_t *)(static_cast<size_t>(*(DWORD *)((PUCHAR)(function_address + 2))) + JMP_DWORD_OPCODE_SIZE + function_address);
+
+        InlineHook::SetJumpBackFromHookingFunction(real_close_handle_virtual_address);
+        std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
         // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
-        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(edited_bytes_code.size(), PAGE_EXECUTE_READWRITE);
+        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(bytes_code.size(), PAGE_EXECUTE_READWRITE);
 
         // Push the bytes code of HookedCloseHandle into that allocated memory.
-        if (pe_memory->ProcessMemory::WriteData(code_ptr, edited_bytes_code) == false)
+        if (pe_memory->ProcessMemory::WriteData(code_ptr, bytes_code) == false)
         {
             return;
         }
 
-        // Modify jump in the CloseHandle() to jump to the beginning of hooking function
-        // Since jump do not allow any value greater than max of DWORD -> use push hooking_function_address; ret; nop * x
+        // Modify jump in the CloseHandle in kernel32.dll to jump to the beginning of hooking function
 
-        #ifdef _WIN64
-            std::vector<UCHAR> jmp_bytes_code_close_handle(9); // 1 for push opcode, 8 for address_ptr, 1 for ret
-        #elif _WIN32
-            std::vector<UCHAR> jmp_bytes_code_close_handle(5); // 1 for push opcode, 4 for address_ptr, 1 for ret
-        #endif
-
-        if (pe_memory->ProcessMemory::WriteData((LPVOID)function_address, jmp_bytes_code_close_handle) == false)
+        if (pe_memory->ProcessMemory::WriteData((LPVOID)function_address, InlineHook::GetJumpInstruction((size_t)code_ptr)) == false)
         {
             return;
         }
@@ -152,3 +110,4 @@ namespace hook
     }
 
 }
+

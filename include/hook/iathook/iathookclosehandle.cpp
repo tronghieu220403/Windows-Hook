@@ -16,37 +16,13 @@ namespace hook
 
     void IatHookCloseHandle::SetDefaultBytesCode()
     {
-        #ifdef _DEBUG
-            PUCHAR p_hooked_close_handle = (PUCHAR)&IatHookCloseHandle::HookedCloseHandleFunction + 5 + *(DWORD *)((size_t) & IatHookCloseHandle::HookedCloseHandleFunction + 1);
-        #else
-            PUCHAR p_hooked_close_handle = (PUCHAR)&IatHookCloseHandle::HookedCloseHandleFunction;
-        #endif // DEBUG
-
-        size_t end_addr = 0;
-        size_t i = 0;
-
-        // Get bytes code of "static void HookedCloseHandle(HANDLE h_object)";
-        // Find HookedCloseHandle function ulti we find 5x C3 (pop something; ret)
-
-        for (;;i++)
-        {
-            if (((*(char*)(p_hooked_close_handle + i + 1) & 0xff) == 0xc3 && (*(char*)(p_hooked_close_handle + i) & 0xf0) == 0x50))
-            {
-                end_addr = i + 2;
-                break;
-            }
-        }
-
-        std::vector<UCHAR> bytes_code;
-        bytes_code.resize(end_addr);
-        ::memcpy(bytes_code.data(), p_hooked_close_handle, end_addr);
-        Hook::SetBytesCode(bytes_code);
+        Hook::SetHookingBytesCode((PVOID)&IatHookCloseHandle::HookedCloseHandleFunction);    
     }
 
     void IatHookCloseHandle::HookCloseHandle()
     {
         std::shared_ptr<pe::PeMemory> pe_memory = IatHook::GetPeMemory();
-        std::vector<UCHAR> bytes_code = Hook::GetBytesCode();
+        std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
         if (pe_memory->GetBaseAddress() == 0)
         {
@@ -60,11 +36,7 @@ namespace hook
             return;
         }
 
-        #ifdef _WIN64
-            size_t address = ulti::MemoryToUint64(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, 8).data());
-        #elif _WIN32
-            size_t address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, 4).data());
-        #endif
+        size_t address = ulti::MemoryToUint64(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
 
         // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
         LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(bytes_code.size(), PAGE_EXECUTE_READWRITE);
@@ -76,18 +48,10 @@ namespace hook
         }
 
         // Replace the CloseHandle() address by code_ptr in va_close_handle_iat
-        #ifdef _WIN64
-        if (pe_memory->ProcessMemory::WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 8) == false)
-        {
-            std::cout << GetLastError() << std::endl;
-            return;
-        }
-        #elif _WIN32
-        if (pe_memory->ProcessMemory::WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, 4) == false)
+        if (pe_memory->ProcessMemory::WriteData(va_close_handle_iat, (PUCHAR)&code_ptr, sizeof(LPVOID)) == false)
         {
             return;
         }
-        #endif
 
         return;
     }
