@@ -78,7 +78,7 @@ We need to allocate a heap with `PAGE_EXECUTE_READWRITE` protection attributes, 
 
 Hooked function: modify instruction of the code by **replace some first line of the hooked function** by your `jmp` instruction to the hooking function.
 
-Hooking function: Allocate a heap with `PAGE_EXECUTE_READWRITE` protection attributes, we will remove the `ret` instruction in the hooking function and append all replaced lines of hooked function into the end of the hooking function. Finally, we will append a the jmp instruction to **jump back to right after the last replaced lines in hooked function** to conserve the execution of the original hooked function.
+Hooking function: Allocate a heap with `PAGE_EXECUTE_READWRITE` protection attributes, we will remove the `ret` instruction in the hooking function and append all replaced lines of hooked function into the end of the hooking function. Next, we will append a the jmp instruction to **jump back to right after the last replaced lines in hooked function** to conserve the execution of the original hooked function. Finally, copy the completed bytes code of hooking function into the allocated heap above.
 
 Folder structure
 ----------------
