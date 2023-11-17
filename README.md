@@ -1,6 +1,6 @@
-# IAT hooking in Windows usermode 
+# Hooking in Windows usermode
  
-Welcome to the "IAT hooking in Windows usermode" repository! This is an open-source project that aims to provide a modification in Import Address Table of a running usermode process to change it's execution flow.
+Welcome to the "Hooking in Windows usermode" repository! This is an open-source project that aims to provide a modification data of a running usermode process to change it's execution flow.
 
 - [Introdution](#introduction)
 - [Techniques](#techniques)
@@ -14,9 +14,19 @@ Introduction
 
 A process, in the simplest terms, is an executing program. Each process provides the resources needed to execute a program. A process has a virtual address space, executable code, open handles to system objects, a security context, a unique process identifier, environment variables, a priority class, minimum and maximum working set sizes, and at least one thread of execution.
 
+A "hook", in a generic sense, is something that will let you, a programmer, view and/or interact with and/or change something that's already going on in a system/program.
+
+This repository will demonstrate two of these hooking techniques:
+
+### IAT (Import address table) hooking
+
 The Import Address Table is a part of Portable Executable (PE) format which **records the addresses of functions imported from other DLLs**. Therefore the `Import Address Table` is a table filled with `function pointers`. This makes it an attractive target for attackers looking to achieve remote code injection, since they can **overwrite** the entry in the Import Address Table (using a write-what-where vulnerability) and redirect a function call to a location of their choosing.
 
-The IAT hooking in Windows usermode **hook the IAT of other processes**, thereby make them launch your injection  code. 
+The IAT hooking in Windows usermode **hook the IAT of other processes**, thereby make them launch your injection code. 
+
+### Inline hooking
+
+The inline hooking will **change some bytes in the code section of a running process** to change it flow, launch your injection code with out corrupt the process.
 
 Techniques
 ----------------
@@ -60,7 +70,17 @@ Due to the IAT structure, we can easily get the relative VA (RVA) on IAT of the 
 
 ### Hooking
 
-We need to allocate a heap with PAGE_EXECUTE_READWRITE protection attributes, copy the bytes code of hooking function and the modify the value of the hooked function in the IAT to point to our injection code.
+#### IAT hooking
+
+We need to allocate a heap with `PAGE_EXECUTE_READWRITE` protection attributes, copy the bytes code of hooking function and the modify the value of the hooked function in the IAT to point to our injection code.
+
+#### Inline hooking
+
+* Hooking function: Allocate a heap with `PAGE_EXECUTE_READWRITE` protection attributes, we will remove the `ret` instruction in the hooking function and append all replaced lines of hooked function into the end of the hooking function. Next, we will append a the jmp instruction to **jump back to right after the last replaced lines in hooked function** to conserve the execution of the original hooked function. Finally, copy the completed bytes code of hooking function into the allocated heap above.
+
+* Hooked function: modify instruction of the code by **replace some first line of the hooked function** by your `jmp` instruction to the hooking function.
+
+More detail in here: [Manually Implementing Inline Function Hooking](https://blog.securehat.co.uk/process-injection/manually-implementing-inline-function-hooking)
 
 Folder structure
 ----------------
@@ -73,9 +93,13 @@ Folder structure
 │   └── hook
 │   │   └── iathook
 │   │   │   └── iathook.h
-│   │   │   └── iathookclosehandle.h			# hook CloseHandle function in KERNEL32.dll
+│   │   │   └── iathookclosehandle.h			# IAT hook CloseHandle function in KERNEL32.dll
+│   │   └── inlinehook
+│   │   │   └── inlinehook.h
+│   │   │   └── inlineclosehandle.h			# Inline hook CloseHandle function in KERNEL32.dll
+│   └── hook.h
 │   └── pestructure                                        
-│   │   └── idata					# provide information about Import Table Address
+│   │   └── idata					# Provide information about Import Table Address
 │   │   │   └── importdirectorytable.h
 │   │   │   └── importdirectoryentry.h
 │   │   │   └── importlookuptable.h
@@ -94,7 +118,7 @@ Folder structure
 │   └── ulti
 │   │   └── everything.h
 │   │
-├── target
+├── target                                              # We need some where to attack
 │   └── target.exe
 │   └── target.cpp
 │   │
@@ -109,6 +133,8 @@ References
 [MSDN - Processes and Threads](https://learn.microsoft.com/en-us/windows/win32/procthread/processes-and-threads)
 
 [Stack Overflow - Get base address of process](https://stackoverflow.com/questions/14467229/get-base-address-of-process)
+
+[Manually Implementing Inline Function Hooking](https://blog.securehat.co.uk/process-injection/manually-implementing-inline-function-hooking)
 
 Requirements
 ---

@@ -67,4 +67,19 @@ namespace ulti
         return "0x" + std::format("{:x}", value);
     }
 
+    template <typename T>
+    void InsertVector(size_t location, const std::vector<T>& dst, const std::vector<T>& src)
+    {
+        if (location > dst.size())
+        {
+            return;
+        }
+        long long dst_old_size = dst.size();
+        dst.resize(dst.size() + src.size());
+        for (long long i = dst_old_size - 1; i >= (long long)location ; i--)
+        {
+            dst[i + src.size()] = dst[i];
+        }
+        memcpy(&dst[location], &src[0], src.size() * sizeof(T));
+    }
 }
