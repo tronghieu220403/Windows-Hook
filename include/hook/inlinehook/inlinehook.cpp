@@ -18,8 +18,17 @@ namespace hook
     {
         Hook::SetHookingBytesCode(function_address);
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
+
+        #ifdef _WIN64
+            ulti::InsertVector(0, bytes_code, push_param_);
+        #endif
+
         bytes_code.pop_back(); // remove ret from bytes code
-        
+
+        #ifdef _WIN64
+            ulti::InsertVector(0, bytes_code, pop_param_);
+        #endif
+
         std::vector<UCHAR> jmp_bytes_code_hooking_function = InlineHook::GetJumpInstruction(0);
 
         std::copy(jmp_bytes_code_hooking_function.begin(), jmp_bytes_code_hooking_function.end(), std::back_inserter(bytes_code));
@@ -76,6 +85,7 @@ namespace hook
             // push opcode
             jmp_bytes_code[0] = 0xb8;
 
+            // jmp
             memcpy(&jmp_bytes_code[1], &virual_address, 4);
 
         #endif

@@ -41,6 +41,9 @@ namespace ulti
     std::wstring MemoryToWstring(const void *data);
     std::wstring MemoryToWstring(const void *data, int size);
     std::string ToHex(ULONGLONG value);
+
+    template <typename T>
+    void InsertVector(size_t location, const std::vector<T>& dst, const std::vector<T>& src);
 }
 
 

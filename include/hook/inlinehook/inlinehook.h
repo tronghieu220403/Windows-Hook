@@ -18,6 +18,8 @@ namespace hook
     class InlineHook: public Hook
     {
     private:
+        static const inline std::vector<UCHAR> push_param_ = {0x51, 0x52, 0x41, 0x50, 0x41, 0x51}; // push rcx; push rdx; push r8; push r9
+        static const inline std::vector<UCHAR> pop_param_ = {0x41, 0x59, 0x41, 0x58, 0x5a, 0x59};  // pop r9; pop r8; pop rdx; pop rcx
     public:
         InlineHook(int pid);
         InlineHook(const std::string_view& process_name);

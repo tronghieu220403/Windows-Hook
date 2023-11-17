@@ -105,7 +105,6 @@ namespace hook
             number[i] = '\0';
         }
 
-        iat.fnCloseHandle(h_object);
         return;
     }
 
