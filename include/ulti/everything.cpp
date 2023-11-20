@@ -68,7 +68,7 @@ namespace ulti
     }
 
     template <typename T>
-    void InsertVector(size_t location, const std::vector<T>& dst, const std::vector<T>& src)
+    void InsertVector(const std::vector<T>& dst, size_t location, const std::vector<T>& src)
     {
         if (location > dst.size())
         {

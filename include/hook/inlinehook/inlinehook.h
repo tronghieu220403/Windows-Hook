@@ -6,13 +6,15 @@
 
 namespace hook
 {
+    #define RET_OPCODE 0xc3
+    #define INT_3_OPCODE 0xcc
     #define JMP_DWORD_OPCODE_SIZE 6
-    #define PUSH_JMP_RAX_X64_SIZE 12 // 2 for push opcode, 8 for address_ptr, 2 for jmp rax
-    #define PUSH_JMP_EAX_X86_SIZE 7 // 1 for push opcode, 4 for address_ptr, 2 for jmp eax
+    #define MOV_JMP_RAX_X64_SIZE 12 // 2 for push opcode, 8 for address_ptr, 2 for jmp rax
+    #define MOV_JMP_EAX_X86_SIZE 7 // 1 for push opcode, 4 for address_ptr, 2 for jmp eax
     #ifdef _WIN64
-        #define PUSH_JMP_SIZE PUSH_JMP_RAX_X64_SIZE
+        #define MOV_JMP_SIZE MOV_JMP_RAX_X64_SIZE
     #elif _WIN32
-        #define PUSH_JMP_SIZE PUSH_JMP_EAX_X86_SIZE
+        #define MOV_JMP_SIZE MOV_JMP_EAX_X86_SIZE
     #endif
 
     class InlineHook: public Hook
@@ -31,6 +33,8 @@ namespace hook
         void AddBytesCodeBeforeLastJump(std::vector<UCHAR> added_bytes_code);
 
         std::vector<UCHAR> GetJumpInstruction(size_t virual_address);
+
+        std::vector<UCHAR> GetCallInstruction(size_t virual_address);
     };
 }
 

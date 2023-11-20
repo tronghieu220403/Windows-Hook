@@ -41,8 +41,11 @@ namespace hook
 
         // For this case (same case for many other functions that are inherited from other DLLs), we only need to find the exact value of "some address" in the instruction above and then jump to it at the end of the hooking function.
 
-        size_t real_close_handle_virtual_address = *(size_t *)(static_cast<size_t>(*(DWORD *)((PUCHAR)(function_address + 2))) + JMP_DWORD_OPCODE_SIZE + function_address);
-
+        #ifdef _WIN32
+            size_t real_close_handle_virtual_address = *(size_t *)(static_cast<size_t>(*(DWORD *)((PUCHAR)(function_address + 2))) + JMP_DWORD_OPCODE_SIZE + function_address);
+        #elif _WIN64
+            size_t real_close_handle_virtual_address = *(size_t *)(static_cast<size_t>(*(DWORD *)((PUCHAR)(function_address + 3))) + JMP_DWORD_OPCODE_SIZE + function_address);
+        #endif
         InlineHook::SetJumpBackFromHookingFunction(real_close_handle_virtual_address);
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 

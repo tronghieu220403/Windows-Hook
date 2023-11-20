@@ -20,13 +20,13 @@ namespace hook
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
         #ifdef _WIN64
-            ulti::InsertVector(0, bytes_code, push_param_);
+            ulti::InsertVector(bytes_code, 0, push_param_);
         #endif
 
         bytes_code.pop_back(); // remove ret from bytes code
 
         #ifdef _WIN64
-            ulti::InsertVector(0, bytes_code, pop_param_);
+            ulti::InsertVector(bytes_code, 0, pop_param_);
         #endif
 
         std::vector<UCHAR> jmp_bytes_code_hooking_function = InlineHook::GetJumpInstruction(0);
@@ -58,9 +58,9 @@ namespace hook
     {
 
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
-        std::vector<UCHAR> new_bytes_code(bytes_code.begin(), bytes_code.end() - PUSH_JMP_SIZE); // initialization: no last jmp instruction
+        std::vector<UCHAR> new_bytes_code(bytes_code.begin(), bytes_code.end() - MOV_JMP_SIZE); // initialization: no last jmp instruction
         std::copy(added_bytes_code.begin(), added_bytes_code.end(), std::back_inserter(new_bytes_code));
-        std::copy(bytes_code.end() - PUSH_JMP_SIZE, bytes_code.end(), std::back_inserter(new_bytes_code));
+        std::copy(bytes_code.end() - MOV_JMP_SIZE, bytes_code.end(), std::back_inserter(new_bytes_code));
 
         Hook::SetHookingBytesCode(new_bytes_code);
     }
@@ -69,7 +69,7 @@ namespace hook
     {
 
         // Since jump do not allow any value greater than max of DWORD -> use mov rax, address_ptr; jmp rax (rax for x64, eax for x86);
-        std::vector<UCHAR> jmp_bytes_code(PUSH_JMP_SIZE); 
+        std::vector<UCHAR> jmp_bytes_code(MOV_JMP_SIZE); 
 
         #ifdef _WIN64
             
@@ -90,8 +90,8 @@ namespace hook
 
         #endif
 
-        jmp_bytes_code[PUSH_JMP_SIZE - 2] = 0xff;
-        jmp_bytes_code[PUSH_JMP_SIZE - 1] = 0xe0;
+        jmp_bytes_code[MOV_JMP_SIZE - 2] = 0xff;
+        jmp_bytes_code[MOV_JMP_SIZE - 1] = 0xe0;
 
         return jmp_bytes_code;
     }
