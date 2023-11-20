@@ -1,7 +1,12 @@
-// Build -> Propertises:
-// Code Generation -> Security Check: Disable Security Check (/GS-)
-// Optimization -> Optimization: /O2
-// Optimization -> Inline Function Expansion: /Ob2
+/*
+* Use the following pre define: ZYDIS_STATIC_BUILD; ZYCORE_STATIC_BUILD
+
+* Build -> Propertises:
+* C/C++ -> Output Files -> Object File Name: $(IntDir)%(RelativeDir)
+* Code Generation -> Security Check: Disable Security Check (/GS-)
+* Optimization -> Optimization: /O2
+* Optimization -> Inline Function Expansion: /Ob2
+*/
 
 #include <iostream>
 
