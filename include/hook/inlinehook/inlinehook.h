@@ -41,7 +41,7 @@ namespace hook
             0x52,           // push rdx
             0x41, 0x50,     // push r8
             0x41, 0x51,     // push r9
-            0x50;           // push rax
+            0x50,           // push rax
             0x53, 	        // push rbx
             0x55, 	        // push rbp
             0x57,           // push rdi

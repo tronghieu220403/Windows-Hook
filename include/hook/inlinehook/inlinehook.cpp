@@ -19,15 +19,9 @@ namespace hook
         Hook::SetHookingBytesCode(function_address);
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
-        #ifdef _WIN64
-            ulti::InsertVector(bytes_code, 0, push_param_);
-        #endif
-
         bytes_code.pop_back(); // remove ret from bytes code
-
-        #ifdef _WIN64
-            ulti::InsertVector(bytes_code, 0, pop_param_);
-        #endif
+        ulti::InsertVector(bytes_code, 0, push_param_);
+        ulti::InsertVector(bytes_code, bytes_code.size(), pop_param_);
 
         std::vector<UCHAR> jmp_bytes_code_hooking_function = InlineHook::GetJumpInstruction(0);
 
