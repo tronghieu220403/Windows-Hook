@@ -19,9 +19,6 @@ namespace hook
 
     class InlineHook: public Hook
     {
-    private:
-        static const inline std::vector<UCHAR> push_param_ = {0x51, 0x52, 0x41, 0x50, 0x41, 0x51}; // push rcx; push rdx; push r8; push r9
-        static const inline std::vector<UCHAR> pop_param_ = {0x41, 0x59, 0x41, 0x58, 0x5a, 0x59};  // pop r9; pop r8; pop rdx; pop rcx
     public:
         InlineHook(int pid);
         InlineHook(const std::string_view& process_name);
@@ -35,6 +32,66 @@ namespace hook
         std::vector<UCHAR> GetJumpInstruction(size_t virual_address);
 
         std::vector<UCHAR> GetCallInstruction(size_t virual_address);
+        
+    private:
+#ifdef _WIN64
+        static const inline std::vector<UCHAR> push_param_ =
+        {
+            0x51,           // push rcx
+            0x52,           // push rdx
+            0x41, 0x50,     // push r8
+            0x41, 0x51,     // push r9
+            0x50;           // push rax
+            0x53, 	        // push rbx
+            0x55, 	        // push rbp
+            0x57,           // push rdi
+            0x56,	        // push rsi
+            0x41, 0x54,	    // push r12
+            0x41, 0x55,	    // push r13
+            0x41, 0x56,	    // push r14
+            0x41, 0x57	    // push r15
+        };  
+        static const inline std::vector<UCHAR> pop_param_ = 
+        { 
+            0x41, 0x5f,	    // pop r15
+            0x41, 0x5e,	    // pop r14
+            0x41, 0x5d, 	// pop r13
+            0x41, 0x5c,	    // pop r12
+            0x5e,	        // pop rsi
+            0x5f,	        // pop rdi
+            0x5d,	        // pop rbp
+            0x5b,	        // pop rbx
+            0x58,           // pop rax
+            0x41, 0x59,     // pop r9
+            0x41, 0x58,     // pop r8
+            0x5a,           // pop rdx
+            0x59            // pop rcx
+        };  
+#elif _WIN32
+        static const inline std::vector<UCHAR> push_param_ = 
+        {
+            0x50,           // push eax
+            0x51,           // push ecx
+            0x52,           // push edx
+            0x53, 	        // push ebx
+            0x55, 	        // push ebp
+            0x56,           // push esi
+            0x57,	        // push edi
+        };
+
+        static const inline std::vector<UCHAR> pop_param_ = 
+        {
+            0x5f,           // pop edi
+            0x5e,           // pop esi
+            0x5d,           // pop ebp
+            0x5b, 	        // pop ebx
+            0x5a, 	        // pop edx
+            0x59,           // pop ecx
+            0x58,	        // pop eax
+        };
+
+#endif
+
     };
 }
 
