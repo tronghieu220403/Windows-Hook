@@ -35,22 +35,19 @@ namespace hook
             return;
         }
 
-        size_t function_address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
+        size_t close_handle_address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
 
-        // Look at the address of CloseHandle in kernel32.dll, since the function is inherited from an other DLL so the instruction at that address in kernel32 is always be "jmp [some address]"
-
-        // For this case (same case for many other functions that are inherited from other DLLs), we only need to find the exact value of "some address" in the instruction above and then jump to it at the end of the hooking function.
-
-        #ifdef _WIN32
-            size_t real_close_handle_virtual_address = *(size_t *)(static_cast<size_t>(*(DWORD *)((PUCHAR)(function_address + 2))) + JMP_DWORD_OPCODE_SIZE + function_address);
-        #elif _WIN64
-            size_t real_close_handle_virtual_address = *(size_t *)(static_cast<size_t>(*(DWORD *)((PUCHAR)(function_address + 3))) + JMP_DWORD_OPCODE_SIZE + function_address);
-        #endif
-        InlineHook::SetJumpBackFromHookingFunction(real_close_handle_virtual_address);
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
         // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
-        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(bytes_code.size(), PAGE_EXECUTE_READWRITE);
+        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(0x3000, PAGE_EXECUTE_READWRITE);
+
+        // take some bytes in the closehandle, modify it and push it to the bytes_code
+        std::vector<UCHAR> saved_original_bytes_code = TakeInstructions((LPVOID)close_handle_address, (PUCHAR)code_ptr + bytes_code.size());
+        ulti::InsertVector(bytes_code, bytes_code.size(), saved_original_bytes_code);
+
+        // jmp back to the close handle to continue execute
+        std::vector<UCHAR> last_jmp = InlineHook::GetJumpInstruction((PUCHAR)code_ptr + bytes_code.size(), (LPVOID)(close_handle_address + saved_original_bytes_code.size()));
 
         // Push the bytes code of HookedCloseHandle into that allocated memory.
         if (pe_memory->ProcessMemory::WriteData(code_ptr, bytes_code) == false)
@@ -59,8 +56,8 @@ namespace hook
         }
 
         // Modify jump in the CloseHandle in kernel32.dll to jump to the beginning of hooking function
-
-        if (pe_memory->ProcessMemory::WriteData((LPVOID)function_address, InlineHook::GetJumpInstruction((size_t)code_ptr)) == false)
+        // Better be jump dword
+        if (pe_memory->ProcessMemory::WriteData((LPVOID)close_handle_address, InlineHook::GetJumpInstruction((LPVOID)close_handle_address, code_ptr)) == false)
         {
             return;
         }

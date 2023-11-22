@@ -32,6 +32,7 @@ namespace process
         bool WriteData(void* virtual_address, std::vector<UCHAR> data);
         bool WriteData(void* virtual_address, const PUCHAR data, size_t size);
 
+        LPVOID GetNearestFreeMemory(LPVOID rva, size_t size);
         LPVOID MemoryAlloc(size_t size, DWORD protect);
         bool MemoryFree(LPVOID addr);
 

@@ -3,6 +3,8 @@
 
 #include "ulti/everything.h"
 #include "hook/hook.h"
+#include "Zydis/Zydis.h"
+#include "asm/instructionmodificator.h"
 
 namespace hook
 {
@@ -23,15 +25,9 @@ namespace hook
         InlineHook(int pid);
         InlineHook(const std::string_view& process_name);
 
-        void SetHookingBytesCode(PVOID function_address);
+        std::vector<UCHAR> TakeInstructions(LPVOID curr_addr, LPVOID new_address);
 
-        void SetJumpBackFromHookingFunction(size_t virual_address);
-
-        void AddBytesCodeBeforeLastJump(std::vector<UCHAR> added_bytes_code);
-
-        std::vector<UCHAR> GetJumpInstruction(size_t virual_address);
-
-        std::vector<UCHAR> GetCallInstruction(size_t virual_address);
+        std::vector<UCHAR> GetJumpInstruction(LPVOID curr_addr, LPVOID new_address);
         
     private:
 #ifdef _WIN64

@@ -120,9 +120,34 @@ namespace process
         return true;
     }
 
+    LPVOID process::ProcessMemory::GetNearestFreeMemory(LPVOID rva, size_t size)
+    {
+        SYSTEM_INFO sys_info = {};
+        MEMORY_BASIC_INFORMATION mbi{};
+
+        if (rva == NULL)
+        {
+            rva = (LPVOID)GetBaseAddress();
+        }
+
+        GetSystemInfo(&sys_info);
+        size_t curr_rva = (size_t)rva / sys_info.dwPageSize * sys_info.dwPageSize;
+
+        while (VirtualQueryEx(process_control_handle_, (LPVOID)curr_rva, &mbi, sizeof(mbi)))
+        {
+            if (mbi.State == MEM_FREE && mbi.RegionSize >= size)
+            {
+                return (LPVOID)mbi.BaseAddress;
+            }
+            curr_rva += mbi.RegionSize;
+        }
+
+        return NULL;
+    }
+
     LPVOID ProcessMemory::MemoryAlloc(size_t size, DWORD protect)
     {
-        return ::VirtualAllocEx(process_control_handle_, NULL, size, MEM_COMMIT, protect);;
+        return ::VirtualAllocEx(process_control_handle_, GetNearestFreeMemory(NULL, size), size, MEM_COMMIT, protect);;
     }
 
     bool ProcessMemory::MemoryFree(LPVOID addr)
