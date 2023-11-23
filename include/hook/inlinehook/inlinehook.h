@@ -8,22 +8,19 @@
 
 namespace hook
 {
-    #define RET_OPCODE 0xc3
-    #define INT_3_OPCODE 0xcc
-    #define JMP_DWORD_OPCODE_SIZE 6
-    #define MOV_JMP_RAX_X64_SIZE 12 // 2 for push opcode, 8 for address_ptr, 2 for jmp rax
-    #define MOV_JMP_EAX_X86_SIZE 7 // 1 for push opcode, 4 for address_ptr, 2 for jmp eax
-    #ifdef _WIN64
-        #define MOV_JMP_SIZE MOV_JMP_RAX_X64_SIZE
-    #elif _WIN32
-        #define MOV_JMP_SIZE MOV_JMP_EAX_X86_SIZE
-    #endif
+    #define JMP_DWORD_OPCODE_SIZE 5
 
     class InlineHook: public Hook
     {
+    private: 
+        std::string dll_name_;
+        std::string function_name_;
+        PVOID hooking_function_ = nullptr;
     public:
-        InlineHook(int pid);
-        InlineHook(const std::string_view& process_name);
+        InlineHook(int pid, const std::string_view& function_name, const std::string_view& dll_name, const PVOID hooking_function);
+        InlineHook(const std::string_view& process_name, const std::string_view& function_name, const std::string_view& dll_name, const PVOID hooking_function);
+
+        bool StartHook();
 
         std::vector<UCHAR> TakeInstructions(LPVOID curr_addr, LPVOID new_address, size_t lower_bound);
 
@@ -31,6 +28,15 @@ namespace hook
 
         std::vector<UCHAR> GetJumpInstruction(LPVOID curr_addr, LPVOID new_address);
         
+        std::string GetDllName() const;
+        void SetDllName(const std::string_view& dll_name);
+
+        std::string GetFunctionName() const;
+        void SetFunctionName(const std::string_view& function_name);
+
+        PVOID GetHookingFunction() const;
+        void SetHookingFunction(const PVOID hooking_function);
+
     private:
 #ifdef _WIN64
         static const inline std::vector<UCHAR> push_param_ =

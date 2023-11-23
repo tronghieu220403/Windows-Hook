@@ -19,7 +19,7 @@ namespace assembly
         {
             return LeaChangeAdddress(curr_addr);
         }
-        if (instruction.info.mnemonic == ZYDIS_MNEMONIC_JMP)
+        if (ZYDIS_MNEMONIC_JB <= instruction.info.mnemonic && instruction.info.mnemonic <= ZYDIS_MNEMONIC_JZ)
         {
             return JmpChangeAdddress(curr_addr, new_address);
         }
@@ -153,8 +153,8 @@ namespace assembly
                 req.machine_mode = instruction.info.machine_mode;
                 req.operand_count = 1;
                 req.operands[0].type = instruction.operands[0].type;
-                req.operands[0].mem.size = ZYDIS_MACHINE_MODE_LONG_64 ? 4 : 2;
-                req.operands[0].mem.base = req.machine_mode == ZYDIS_MACHINE_MODE_LONG_64 ? ZYDIS_REGISTER_RIP : ZYDIS_REGISTER_NONE;
+                req.operands[0].mem.size = instruction.info.machine_mode==ZYDIS_MACHINE_MODE_LONG_64 ? 8 : 2;
+                req.operands[0].mem.base = instruction.info.machine_mode==ZYDIS_MACHINE_MODE_LONG_64 ? ZYDIS_REGISTER_RIP : ZYDIS_REGISTER_NONE;
 
                 DWORD new_distance = (DWORD)(curr_addr - new_address + instruction.operands[0].mem.disp.value);
 
@@ -210,7 +210,7 @@ namespace assembly
                 req.operand_count = 1;
                 req.operands[0].type = instruction.operands[0].type;
                 req.operands[0].mem.size = 4;
-                req.operands[0].mem.base = req.machine_mode == ZYDIS_MACHINE_MODE_LONG_64 ? ZYDIS_REGISTER_RIP : ZYDIS_REGISTER_NONE;
+                req.operands[0].mem.base = req.machine_mode==ZYDIS_MACHINE_MODE_LONG_64 ? ZYDIS_REGISTER_RIP : ZYDIS_REGISTER_NONE;
 
                 req.operands[0].mem.displacement = ULONG_MAX;
                 std::vector<UCHAR> encode = AssemblyEncoder(req).GetEncodedBytesCode();

@@ -2,17 +2,89 @@
 
 namespace hook
 {
-    InlineHook::InlineHook(int pid):
-        Hook(pid)
+    InlineHook::InlineHook(int pid, const std::string_view& function_name, const std::string_view& dll_name, const PVOID hooking_function):
+        Hook(pid),
+        dll_name_(dll_name),
+        function_name_(function_name),
+        hooking_function_(hooking_function)
     {
-
+        Hook::SetHookingBytesCode(hooking_function_);
     }
 
-    InlineHook::InlineHook(const std::string_view& process_name):
-        Hook(process_name)
+    InlineHook::InlineHook(const std::string_view& process_name, const std::string_view& function_name, const std::string_view& dll_name, const PVOID hooking_function):
+        Hook(process_name),
+        dll_name_(dll_name),
+        function_name_(function_name),
+        hooking_function_(hooking_function)
     {
-
+        Hook::SetHookingBytesCode(hooking_function_);
     }
+
+    bool InlineHook::StartHook()
+    {
+        std::shared_ptr<pe::PeMemory> pe_memory = InlineHook::GetPeMemory();
+
+        if (pe_memory->GetBaseAddress() == 0)
+        {
+            return false;
+        }
+
+        LPVOID va_close_handle_iat = (void *)(Hook::GetVirutalAddressOfFunctionOnIat(dll_name_, function_name_));
+
+        if (va_close_handle_iat == NULL)
+        {
+            return false;
+        }
+
+        #ifdef _WIN64
+            size_t close_handle_address = ulti::MemoryToUint64(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
+        #elif _WIN32
+            size_t close_handle_address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
+        #endif // _WIN64
+
+        std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
+
+        // Save register value (only x64)
+        #ifdef _WIN64
+            Hook::SetHookingBytesCode(bytes_code);
+            InlineHook::SaveRegisters();
+            bytes_code = Hook::GetHookingBytesCode();
+        #endif
+
+        // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
+        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAllocNear((LPVOID)close_handle_address, 0x3000, PAGE_EXECUTE_READWRITE);
+
+        if (code_ptr == nullptr)
+        {
+            return false;
+        }
+
+        // take some bytes in the closehandle, modify it and push it to the bytes_code
+        std::vector<UCHAR> saved_original_bytes_code = TakeInstructions((LPVOID)close_handle_address, (PUCHAR)code_ptr + bytes_code.size(), JMP_DWORD_OPCODE_SIZE);
+        ulti::InsertVector(bytes_code, bytes_code.size(), saved_original_bytes_code);
+
+        // jmp back to the close handle to continue execute
+        std::vector<UCHAR> last_jmp = InlineHook::GetJumpInstruction((PUCHAR)code_ptr + bytes_code.size(), (LPVOID)(close_handle_address + saved_original_bytes_code.size()));
+        ulti::InsertVector(bytes_code, bytes_code.size(), last_jmp);
+
+        Hook::SetHookingBytesCode(bytes_code);
+
+        // Push the bytes code of HookedCloseHandle into that allocated memory.
+        if (pe_memory->ProcessMemory::WriteData(code_ptr, bytes_code) == false)
+        {
+            return false;
+        }
+
+        // Modify jump in the CloseHandle in kernel32.dll to jump to the beginning of hooking function
+        // Better be jump dword
+        if (pe_memory->ProcessMemory::WriteData((LPVOID)close_handle_address, InlineHook::GetJumpInstruction((LPVOID)close_handle_address, code_ptr)) == false)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
 
     std::vector<UCHAR> InlineHook::TakeInstructions(LPVOID curr_addr, LPVOID new_address, size_t lower_bound)
     {
@@ -72,17 +144,44 @@ namespace hook
 
     std::vector<UCHAR> InlineHook::GetJumpInstruction(LPVOID curr_addr, LPVOID new_address)
     {
-        std::vector<UCHAR> jmp(5);
+        std::vector<UCHAR> jmp(JMP_DWORD_OPCODE_SIZE);
         jmp[0] = 0xe9;
-        LONGLONG distance = (LONGLONG)new_address - ((LONGLONG)curr_addr + 5);
+        LONGLONG distance = (LONGLONG)new_address - ((LONGLONG)curr_addr + JMP_DWORD_OPCODE_SIZE);
 
         LONGLONG cmp = distance < 0 ? 0 - distance : distance;
 
-        if (cmp > (LONGLONG)ULONG_MAX)
-        {
-            std::cout << "Jmp not good" << std::endl;
-        }
         *(DWORD *)(&jmp[1]) = distance;
         return jmp;
     }
+
+    std::string InlineHook::GetDllName() const
+    {
+        return dll_name_;
+    }
+
+    void InlineHook::SetDllName(const std::string_view& dll_name)
+    {
+        dll_name_ = dll_name;
+    }
+
+    std::string InlineHook::GetFunctionName() const
+    {
+        return function_name_;
+    }
+
+    void InlineHook::SetFunctionName(const std::string_view& function_name)
+    {
+        function_name_ = function_name;
+    }
+
+    PVOID InlineHook::GetHookingFunction() const
+    {
+        return hooking_function_;
+    }
+
+    void InlineHook::SetHookingFunction(const PVOID hooking_function)
+    {
+        hooking_function_ = hooking_function;
+    }
+
 }

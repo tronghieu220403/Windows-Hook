@@ -13,9 +13,6 @@ namespace hook
         InlineHookCloseHandle(int pid);
         InlineHookCloseHandle(const std::string_view& process_name);
 
-        void SetDefaultBytesCode();
-        
-        void HookCloseHandle();
         static void HookedCloseHandleFunction(HANDLE h_object);
 
     };
