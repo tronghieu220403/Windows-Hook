@@ -39,23 +39,31 @@ namespace hook
             PUCHAR p_hooked_close_handle = (PUCHAR)function_address;
         #endif // DEBUG
 
-        size_t end_addr = 0;
-        size_t i = 0;
+        ZyanUSize offset = 0;
+        ZydisDisassembledInstruction instruction;
 
-        // Get bytes code of "static void HookedCloseHandle(HANDLE h_object)";
-        // Find HookedCloseHandle function ulti we find 5x C3 (pop something; ret)
+#ifdef _WIN64
+        /* machine_mode:    */ auto machine_mode = ZYDIS_MACHINE_MODE_LONG_64;
+#elif _WIN32
+        /* machine_mode:    */ auto machine_mode = ZYDIS_MACHINE_MODE_LONG_COMPAT_32;
+#endif
 
-        for (;;i++)
-        {
-            if (((*(char*)(p_hooked_close_handle + i + 1) & 0xff) == 0xc3 && (*(char*)(p_hooked_close_handle + i) & 0xf0) == 0x50))
+        while (ZYAN_SUCCESS(ZydisDisassembleIntel(
+            /* machine_mode:    */ machine_mode,
+            /* runtime_address: */ 0,
+            /* buffer:          */ (PUCHAR)p_hooked_close_handle + offset,
+            /* length:          */ 100,
+            /* instruction:     */ &instruction
+        ))) {
+            offset += instruction.info.length;
+            if (std::string(instruction.text) == "ret")
             {
-                end_addr = i + 2;
                 break;
             }
         }
 
-        bytes_code_.resize(end_addr);
-        ::memcpy(bytes_code_.data(), p_hooked_close_handle, end_addr);
+        bytes_code_.resize(offset - 1);
+        ::memcpy(bytes_code_.data(), p_hooked_close_handle, offset-1);
     }
 
     void Hook::SetHookingBytesCode(const std::vector<UCHAR> bytes_code)

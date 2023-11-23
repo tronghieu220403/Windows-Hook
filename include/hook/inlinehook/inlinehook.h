@@ -27,6 +27,8 @@ namespace hook
 
         std::vector<UCHAR> TakeInstructions(LPVOID curr_addr, LPVOID new_address, size_t lower_bound);
 
+        void SaveRegisters();
+
         std::vector<UCHAR> GetJumpInstruction(LPVOID curr_addr, LPVOID new_address);
         
     private:

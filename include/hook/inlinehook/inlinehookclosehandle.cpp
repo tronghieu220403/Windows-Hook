@@ -43,15 +43,29 @@ namespace hook
 
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
+        // Save register value
+        Hook::SetHookingBytesCode(bytes_code);
+        InlineHook::SaveRegisters();
+        bytes_code = Hook::GetHookingBytesCode();
+
         // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
-        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(0x3000, PAGE_EXECUTE_READWRITE);
+        
+        LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAllocNear((LPVOID)close_handle_address, 0x3000, PAGE_EXECUTE_READWRITE);
+
+        if (code_ptr == nullptr)
+        {
+            return;
+        }
 
         // take some bytes in the closehandle, modify it and push it to the bytes_code
-        std::vector<UCHAR> saved_original_bytes_code = TakeInstructions((LPVOID)close_handle_address, (PUCHAR)code_ptr + bytes_code.size(), 7);
+        std::vector<UCHAR> saved_original_bytes_code = TakeInstructions((LPVOID)close_handle_address, (PUCHAR)code_ptr + bytes_code.size(), 5);
         ulti::InsertVector(bytes_code, bytes_code.size(), saved_original_bytes_code);
 
         // jmp back to the close handle to continue execute
         std::vector<UCHAR> last_jmp = InlineHook::GetJumpInstruction((PUCHAR)code_ptr + bytes_code.size(), (LPVOID)(close_handle_address + saved_original_bytes_code.size()));
+        ulti::InsertVector(bytes_code, bytes_code.size(), last_jmp);
+
+        Hook::SetHookingBytesCode(bytes_code);
 
         // Push the bytes code of HookedCloseHandle into that allocated memory.
         if (pe_memory->ProcessMemory::WriteData(code_ptr, bytes_code) == false)

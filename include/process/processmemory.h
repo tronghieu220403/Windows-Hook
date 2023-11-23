@@ -34,6 +34,7 @@ namespace process
 
         LPVOID GetNearestFreeMemory(LPVOID rva, size_t size);
         LPVOID MemoryAlloc(size_t size, DWORD protect);
+        LPVOID MemoryAllocNear(LPVOID rva, size_t size, DWORD protect);
         bool MemoryFree(LPVOID addr);
 
         ~ProcessMemory();

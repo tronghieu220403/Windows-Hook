@@ -62,11 +62,26 @@ namespace hook
         return saved_original_bytes_code;
     }
 
+    void InlineHook::SaveRegisters()
+    {
+        std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
+        ulti::InsertVector(bytes_code, 0, push_param_);
+        ulti::InsertVector(bytes_code, bytes_code.size(), pop_param_);
+        Hook::SetHookingBytesCode(bytes_code);
+    }
+
     std::vector<UCHAR> InlineHook::GetJumpInstruction(LPVOID curr_addr, LPVOID new_address)
     {
         std::vector<UCHAR> jmp(5);
         jmp[0] = 0xe9;
-        DWORD distance = (DWORD)((size_t)new_address - ((size_t)curr_addr + 5));
+        LONGLONG distance = (LONGLONG)new_address - ((LONGLONG)curr_addr + 5);
+
+        LONGLONG cmp = distance < 0 ? 0 - distance : distance;
+
+        if (cmp > (LONGLONG)ULONG_MAX)
+        {
+            std::cout << "Jmp not good" << std::endl;
+        }
         *(DWORD *)(&jmp[1]) = distance;
         return jmp;
     }

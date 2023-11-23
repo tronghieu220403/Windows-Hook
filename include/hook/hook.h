@@ -4,6 +4,7 @@
 #include "ulti/everything.h"
 #include "pestructure/pememory/pememory.h"
 #include "teb/getfunction.h"
+#include "Zydis/Zydis.h"
 
 namespace hook
 {
