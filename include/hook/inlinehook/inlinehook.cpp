@@ -14,7 +14,7 @@ namespace hook
 
     }
 
-    std::vector<UCHAR> InlineHook::TakeInstructions(LPVOID curr_addr, LPVOID new_address)
+    std::vector<UCHAR> InlineHook::TakeInstructions(LPVOID curr_addr, LPVOID new_address, size_t lower_bound)
     {
         std::vector<UCHAR> saved_original_bytes_code;
         std::vector<UCHAR> data = Hook::GetPeMemory()->ReadData((void *)curr_addr, 30);
@@ -22,18 +22,21 @@ namespace hook
         size_t runtime_address = (size_t)curr_addr;
         ZydisDisassembledInstruction instruction;
 
+#ifdef _WIN64
+        /* machine_mode:    */ auto machine_mode = ZYDIS_MACHINE_MODE_LONG_64;
+#elif _WIN32
+        /* machine_mode:    */ auto machine_mode = ZYDIS_MACHINE_MODE_LONG_COMPAT_32;
+#endif
+        
         while (ZYAN_SUCCESS(ZydisDisassembleIntel(
-                                #ifdef _WIN64
-            /* machine_mode:    */ ZYDIS_MACHINE_MODE_LONG_64,
-                                #else
-            /* machine_mode:    */ ZYDIS_MACHINE_MODE_LONG_COMPAT_32,
-                                #endif
+            /* machine_mode:    */ machine_mode,
             /* runtime_address: */ 0,
-            /* buffer:          */ &data[offset],
+            /* buffer:          */ (void *)&data[offset],
             /* length:          */ data.size() - offset,
             /* instruction:     */ &instruction
-        ))) {
-            
+        ))) 
+        {
+
             std::vector<UCHAR> changed_bytes_code = assembly::AssemblyInstructionModificator((const ZydisDisassembledInstruction&)instruction).ChangeAddress(runtime_address, (size_t)new_address + offset);
 
             size_t old_size = saved_original_bytes_code.size();
@@ -50,7 +53,7 @@ namespace hook
 
             offset += instruction.info.length;
             runtime_address += instruction.info.length;
-            if (offset >= 5)
+            if (offset + 1 >= lower_bound)
             {
                 break;
             }
@@ -65,5 +68,6 @@ namespace hook
         jmp[0] = 0xe9;
         DWORD distance = (DWORD)((size_t)new_address - ((size_t)curr_addr + 5));
         *(DWORD *)(&jmp[1]) = distance;
+        return jmp;
     }
 }

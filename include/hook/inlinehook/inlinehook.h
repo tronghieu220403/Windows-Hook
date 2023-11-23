@@ -25,7 +25,7 @@ namespace hook
         InlineHook(int pid);
         InlineHook(const std::string_view& process_name);
 
-        std::vector<UCHAR> TakeInstructions(LPVOID curr_addr, LPVOID new_address);
+        std::vector<UCHAR> TakeInstructions(LPVOID curr_addr, LPVOID new_address, size_t lower_bound);
 
         std::vector<UCHAR> GetJumpInstruction(LPVOID curr_addr, LPVOID new_address);
         

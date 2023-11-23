@@ -7,6 +7,7 @@
 #include <psapi.h>
 #include <winternl.h>
 #include <imagehlp.h>
+#include <Windows.h>
 
 #include <fstream>
 #include <iostream>
@@ -42,11 +43,20 @@ namespace ulti
     std::wstring MemoryToWstring(const void *data, int size);
     std::string ToHex(ULONGLONG value);
 
-    template <typename T>
-    void InsertVector(const std::vector<T>& dst, size_t location, const std::vector<T>& src);
+    template <typename T> void InsertVector(std::vector<T>& dst, size_t location, const std::vector<T>& src)
+    {
+        if (location > dst.size())
+        {
+            return;
+        }
+        long long dst_old_size = dst.size();
+        dst.resize(dst.size() + src.size());
+        for (long long i = dst_old_size - 1; i >= (long long)location; i--)
+        {
+            dst[i + src.size()] = dst[i];
+        }
+        memcpy(&dst[location], &src[0], src.size() * sizeof(T));
+    }
 }
-
-
-
 
 #endif

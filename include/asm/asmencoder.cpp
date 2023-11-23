@@ -5,7 +5,7 @@ namespace assembly
     AssemblyEncoder::AssemblyEncoder(const ZydisEncoderRequest &req):
         req_(req)
     {
-
+        AssemblyEncoder::EncodeInstruction();
     }
 
     bool AssemblyEncoder::EncodeInstruction()

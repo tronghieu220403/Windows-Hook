@@ -147,7 +147,33 @@ namespace process
 
     LPVOID ProcessMemory::MemoryAlloc(size_t size, DWORD protect)
     {
-        return ::VirtualAllocEx(process_control_handle_, GetNearestFreeMemory(NULL, size), size, MEM_COMMIT, protect);;
+        LPVOID start_rva = GetNearestFreeMemory(NULL, size);
+        if (start_rva == nullptr)
+        {
+            return LPVOID();
+        }
+        LPVOID curr_rva = start_rva;
+        LPVOID ptr = nullptr;
+        while (true)
+        {
+            ptr = ::VirtualAllocEx(process_control_handle_, curr_rva, 0x1000, MEM_COMMIT | MEM_RESERVE, protect);
+            if (ptr == NULL)
+            {
+                std::cout << GetLastError() << std::endl;
+            }
+            else if (ptr != NULL)
+            {
+                std::cout << "OKE" << std::endl;
+            }
+            curr_rva = GetNearestFreeMemory(NULL, size);
+
+            if ((size_t)curr_rva - (size_t)start_rva > (size_t)LONG_MAX)
+            {
+                break;
+            }
+        }
+        
+        return ptr;
     }
 
     bool ProcessMemory::MemoryFree(LPVOID addr)

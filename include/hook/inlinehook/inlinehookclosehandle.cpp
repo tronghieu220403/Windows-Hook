@@ -35,7 +35,11 @@ namespace hook
             return;
         }
 
+#ifdef _WIN64
+        size_t close_handle_address = ulti::MemoryToUint64(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
+#elif _WIN32
         size_t close_handle_address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
+#endif // _WIN64
 
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
@@ -43,7 +47,7 @@ namespace hook
         LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(0x3000, PAGE_EXECUTE_READWRITE);
 
         // take some bytes in the closehandle, modify it and push it to the bytes_code
-        std::vector<UCHAR> saved_original_bytes_code = TakeInstructions((LPVOID)close_handle_address, (PUCHAR)code_ptr + bytes_code.size());
+        std::vector<UCHAR> saved_original_bytes_code = TakeInstructions((LPVOID)close_handle_address, (PUCHAR)code_ptr + bytes_code.size(), 7);
         ulti::InsertVector(bytes_code, bytes_code.size(), saved_original_bytes_code);
 
         // jmp back to the close handle to continue execute

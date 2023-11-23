@@ -135,6 +135,9 @@ namespace assembly
             req.operands[0].type = instruction.operands[0].type;
             DWORD immerdiate_value = (DWORD)(curr_addr + instruction.operands[0].imm.value.u - new_address);
             req.operands[0].imm.u = immerdiate_value;
+
+            return AssemblyEncoder(req).GetEncodedBytesCode();
+
         }
         else if (instruction.operands[0].type == ZYDIS_OPERAND_TYPE_MEMORY)
         {
@@ -142,18 +145,31 @@ namespace assembly
                 instruction.operands[0].mem.index == 0 &&
                 (instruction.operands[0].mem.base == 0 || instruction.operands[0].mem.base == ZYDIS_REGISTER_RIP || instruction.operands[0].mem.base == ZYDIS_REGISTER_EIP))
             {
+                // change this
                 req.mnemonic = instruction.info.mnemonic;
                 req.machine_mode = instruction.info.machine_mode;
                 req.operand_count = 1;
                 req.operands[0].type = instruction.operands[0].type;
-                DWORD new_distance = (DWORD)(curr_addr + instruction.operands[0].mem.disp.value - new_address);
-                req.operands[0].mem.displacement = new_distance;
+                
                 req.operands[0].mem.size = sizeof(DWORD);
                 req.operands[0].mem.base = req.machine_mode == ZYDIS_MACHINE_MODE_LONG_64 ? ZYDIS_REGISTER_RIP : ZYDIS_REGISTER_EIP;
+
+                DWORD new_distance = (DWORD)(curr_addr + instruction.operands[0].mem.disp.value - new_address);
+                req.operands[0].mem.displacement = new_distance;
+
+                if (LONG_MAX < new_distance && new_distance <= ULONG_MAX)
+                {
+                    req.operands[0].mem.displacement = LONG_MAX;
+                    std::vector<UCHAR> encode = AssemblyEncoder(req).GetEncodedBytesCode();
+                    *(DWORD *)&encode[encode.size()-4] = new_distance;
+                    return encode;
+                }
+
+                return AssemblyEncoder(req).GetEncodedBytesCode();
             }
         }
 
-        return AssemblyEncoder(req).GetEncodedBytesCode();
+        return std::vector<UCHAR>();
     }
 
     std::vector<UCHAR> AssemblyInstructionModificator::CallChangeAdddress(size_t curr_addr, size_t new_address)
@@ -183,15 +199,34 @@ namespace assembly
                 instruction.operands[0].mem.index == 0 &&
                 (instruction.operands[0].mem.base == 0 || instruction.operands[0].mem.base == ZYDIS_REGISTER_RIP || instruction.operands[0].mem.base == ZYDIS_REGISTER_EIP))
             {
-                req.mnemonic = instruction.info.mnemonic;
-                req.machine_mode = instruction.info.machine_mode;
-                req.operand_count = 1;
-                req.operands[0].type = instruction.operands[0].type;
-                DWORD new_distance = (DWORD)(curr_addr + instruction.operands[0].mem.disp.value - new_address);            
-                req.operands[0].mem.displacement = new_distance;
-                req.operands[0].mem.size = 4;
-                
-                req.operands[0].mem.base = req.machine_mode==ZYDIS_MACHINE_MODE_LONG_64 ? ZYDIS_REGISTER_RIP : ZYDIS_REGISTER_EIP;
+                size_t new_distance = (curr_addr + instruction.operands[0].mem.disp.value - new_address);
+
+                if (new_distance <= LONG_MAX)
+                {
+                    req.mnemonic = instruction.info.mnemonic;
+                    req.machine_mode = instruction.info.machine_mode;
+                    req.operand_count = 1;
+                    req.operands[0].type = instruction.operands[0].type;
+                    req.operands[0].mem.size = 4;
+                    req.operands[0].mem.base = req.machine_mode == ZYDIS_MACHINE_MODE_LONG_64 ? ZYDIS_REGISTER_RIP : ZYDIS_REGISTER_EIP;
+                    req.operands[0].mem.displacement = new_distance;
+                    return AssemblyEncoder(req).GetEncodedBytesCode();
+                }
+                else if (LONG_MAX < new_distance && new_distance <= LONG_MAX)
+                {
+                    req.mnemonic = instruction.info.mnemonic;
+                    req.machine_mode = instruction.info.machine_mode;
+                    req.operand_count = 1;
+                    req.operands[0].type = instruction.operands[0].type;
+                    req.operands[0].mem.size = 4;
+                    req.operands[0].mem.base = req.machine_mode == ZYDIS_MACHINE_MODE_LONG_64 ? ZYDIS_REGISTER_RIP : ZYDIS_REGISTER_EIP;
+                    req.operands[0].mem.displacement = new_distance;
+
+                    req.operands[0].mem.displacement = ULONG_MAX;
+                    std::vector<UCHAR> encode = AssemblyEncoder(req).GetEncodedBytesCode();
+                    *(DWORD *)&encode[encode.size()-4] = new_distance;
+                    return encode;
+                }
             }
         }
         return AssemblyEncoder(req).GetEncodedBytesCode();

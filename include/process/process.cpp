@@ -38,15 +38,15 @@ namespace process
     {
         int pid = 0;
 
-        PROCESSENTRY32 entry;
-        entry.dwSize = sizeof(PROCESSENTRY32);
+        PROCESSENTRY32W entry;
+        entry.dwSize = sizeof(PROCESSENTRY32W);
         HANDLE snapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
         std::wstring wsTmp(name.begin(), name.end());
 
         if (::Process32FirstW(snapshot, &entry) == TRUE)
         {
-            while (Process32Next(snapshot, &entry) == TRUE)
+            while (Process32NextW(snapshot, &entry) == TRUE)
             {
                 if (::wcscmp(entry.szExeFile, &wsTmp[0]) == 0)
                 {
