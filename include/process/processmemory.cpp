@@ -6,45 +6,45 @@ namespace process
     ProcessMemory::ProcessMemory(int pid):
         ProcessInfo(pid)
     {
-        ProcessMemory::OpenProcessControlHandle();
+        ProcessMemory::Open();
     }
 
     ProcessMemory::ProcessMemory(const std::string_view &process_name):
         ProcessInfo(process_name)
     {
-        ProcessMemory::OpenProcessControlHandle();
+        ProcessMemory::Open();
     }
 
     ProcessMemory::ProcessMemory(const ProcessInfo &process_info):
         ProcessInfo(process_info)
     {
-        ProcessMemory::OpenProcessControlHandle();
+        ProcessMemory::Open();
     }
 
-    void ProcessMemory::OpenProcessControlHandle()
+    void ProcessMemory::Open()
     {
-        process_control_handle_ = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, GetPid());
+        process_memory_handle_ = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, GetPid());
     }
 
-    void ProcessMemory::CloseProcessControlHandle()
+    void ProcessMemory::Close()
     {
-        if (process_control_handle_ != NULL && process_control_handle_ != (HANDLE)(-1))
+        if (process_memory_handle_ != NULL && process_memory_handle_ != (HANDLE)(-1))
         {
-            ::CloseHandle(process_control_handle_);
-            process_control_handle_ = NULL;
+            ::CloseHandle(process_memory_handle_);
+            process_memory_handle_ = NULL;
         }
     }
 
     HANDLE ProcessMemory::GetProcessControlHandle() const
     {
-        return process_control_handle_;
+        return process_memory_handle_;
     }
 
     DWORD ProcessMemory::GetMemoryProtection(void* virtual_address, size_t size)
     {
         MEMORY_BASIC_INFORMATION mem_info = { 0 };
 
-        if (::VirtualQueryEx(process_control_handle_, (LPVOID)(virtual_address), &mem_info, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
+        if (::VirtualQueryEx(process_memory_handle_, (LPVOID)(virtual_address), &mem_info, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
         {
             return mem_info.Protect;
         }
@@ -55,13 +55,13 @@ namespace process
     bool ProcessMemory::SetMemoryProtection(void* virtual_address, size_t size, DWORD new_protection)
     {
         DWORD old_protect;
-        return ::VirtualProtectEx(process_control_handle_, (LPVOID)(virtual_address), size, new_protection, &old_protect) != 0;
+        return ::VirtualProtectEx(process_memory_handle_, (LPVOID)(virtual_address), size, new_protection, &old_protect) != 0;
     }
 
     std::vector<UCHAR> ProcessMemory::ReadData(void* virtual_address, size_t size)
     {
         std::vector<UCHAR> buffer(size);
-        if (::ReadProcessMemory(process_control_handle_, (LPVOID)(virtual_address), buffer.data(), size, NULL) == 0)
+        if (::ReadProcessMemory(process_memory_handle_, (LPVOID)(virtual_address), buffer.data(), size, NULL) == 0)
         {
             return std::vector<UCHAR>();
         }
@@ -78,7 +78,7 @@ namespace process
         // WriteProcessMemory() internally does change the MemoryProtection to writable if it can not write.
 
         // First attempt
-        if (::WriteProcessMemory(process_control_handle_, (LPVOID)(virtual_address), data, size, NULL) != 0)
+        if (::WriteProcessMemory(process_memory_handle_, (LPVOID)(virtual_address), data, size, NULL) != 0)
         {
             return true;
         }
@@ -111,7 +111,7 @@ namespace process
         }
 
         ProcessMemory::SetMemoryProtection(virtual_address, size, new_proctection);
-        if (::WriteProcessMemory(process_control_handle_, (LPVOID)(virtual_address), data, size, NULL) == 0)
+        if (::WriteProcessMemory(process_memory_handle_, (LPVOID)(virtual_address), data, size, NULL) == 0)
         {
             ProcessMemory::SetMemoryProtection(virtual_address, size, old_protection);
             return false;
@@ -133,7 +133,7 @@ namespace process
         GetSystemInfo(&sys_info);
         size_t curr_rva = (size_t)rva / sys_info.dwPageSize * sys_info.dwPageSize;
 
-        while (VirtualQueryEx(process_control_handle_, (LPVOID)curr_rva, &mbi, sizeof(mbi)))
+        while (VirtualQueryEx(process_memory_handle_, (LPVOID)curr_rva, &mbi, sizeof(mbi)))
         {
             if (mbi.State == MEM_FREE && mbi.RegionSize >= size)
             {
@@ -147,7 +147,7 @@ namespace process
 
     LPVOID ProcessMemory::MemoryAlloc(size_t size, DWORD protect)
     {
-        return ::VirtualAllocEx(process_control_handle_, NULL, size, MEM_COMMIT | MEM_RESERVE, protect);
+        return ::VirtualAllocEx(process_memory_handle_, NULL, size, MEM_COMMIT | MEM_RESERVE, protect);
     }
 
     LPVOID ProcessMemory::MemoryAllocNear(LPVOID rva, size_t size, DWORD protect)
@@ -160,11 +160,11 @@ namespace process
         size_t curr_rva = (size_t)rva / sys_info.dwPageSize * sys_info.dwPageSize;
         size_t start_rva = curr_rva;
 
-        while (VirtualQueryEx(process_control_handle_, (LPVOID)curr_rva, &mbi, sizeof(mbi)))
+        while (VirtualQueryEx(process_memory_handle_, (LPVOID)curr_rva, &mbi, sizeof(mbi)))
         {
             if (mbi.State == MEM_FREE && mbi.RegionSize >= size)
             {
-                ptr = ::VirtualAllocEx(process_control_handle_, (LPVOID)curr_rva, size, MEM_COMMIT | MEM_RESERVE, protect);
+                ptr = ::VirtualAllocEx(process_memory_handle_, (LPVOID)curr_rva, size, MEM_COMMIT | MEM_RESERVE, protect);
                 if (ptr != NULL)
                 {
                     return (LPVOID)mbi.BaseAddress;
@@ -184,17 +184,17 @@ namespace process
 
     bool ProcessMemory::MemoryFree(LPVOID addr)
     {
-        return ::VirtualFreeEx(process_control_handle_, (LPVOID)addr, 0, MEM_RELEASE);
+        return ::VirtualFreeEx(process_memory_handle_, (LPVOID)addr, 0, MEM_RELEASE);
     }
 
     ProcessMemory::~ProcessMemory()
     {
-        ProcessMemory::CloseProcessControlHandle();
+        ProcessMemory::Close();
     }
 
-    void ProcessMemory::SetProcessControlHandle(HANDLE process_control_handle)
+    void ProcessMemory::SetProcessMemoryHandle(HANDLE process_control_handle)
     {
-        ProcessMemory::CloseProcessControlHandle();
-        process_control_handle_ = process_control_handle;
+        ProcessMemory::Close();
+        process_memory_handle_ = process_control_handle;
     }
 }

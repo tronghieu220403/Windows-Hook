@@ -1,5 +1,5 @@
-#ifndef USERMODEHOOK_PROCESS_PROCESSMMEMORY_H_
-#define USERMODEHOOK_PROCESS_PROCESSMMEMORY_H_
+#ifndef USERMODEHOOK_PROCESS_PROCESSMEMORY_H_
+#define USERMODEHOOK_PROCESS_PROCESSMEMORY_H_
 
 #include "process/processinfo.h"
 #include "ulti/everything.h"
@@ -11,7 +11,7 @@ namespace process
 	private:
     
         std::string image_file_name_;
-        HANDLE process_control_handle_ = 0;
+        HANDLE process_memory_handle_ = 0;
         std::vector<HMODULE> module_list_;
 
 	public:
@@ -21,9 +21,8 @@ namespace process
         explicit ProcessMemory(const std::string_view& process_name);
 		explicit ProcessMemory(const ProcessInfo& process_info);
 
-        void OpenProcessControlHandle();
-        void CloseProcessControlHandle();
-        HANDLE GetProcessControlHandle() const;
+        void Open();
+        void Close();
 
         DWORD GetMemoryProtection(void* virtual_address, size_t size);
         bool SetMemoryProtection(void* virtual_address, size_t size, DWORD new_protection);
@@ -40,7 +39,8 @@ namespace process
         ~ProcessMemory();
 
     protected:
-        void SetProcessControlHandle(HANDLE process_control_handle);
+        void SetProcessMemoryHandle(HANDLE process_control_handle);
+        HANDLE GetProcessControlHandle() const;
 	};
 }
 
