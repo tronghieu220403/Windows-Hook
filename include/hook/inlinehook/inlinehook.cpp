@@ -29,18 +29,13 @@ namespace hook
             return false;
         }
 
-        LPVOID va_close_handle_iat = (void *)(Hook::GetVirutalAddressOfFunctionOnIat(dll_name_, function_name_));
-
-        if (va_close_handle_iat == NULL)
+        HMODULE kernel32_dll_module = LoadLibraryA(&dll_name_[0]);
+        size_t close_handle_address = (size_t)GetProcAddress(kernel32_dll_module, &function_name_[0]);
+        
+        if (close_handle_address == 0)
         {
             return false;
         }
-
-        #ifdef _WIN64
-            size_t close_handle_address = ulti::MemoryToUint64(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
-        #elif _WIN32
-            size_t close_handle_address = ulti::MemoryToUint32(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
-        #endif // _WIN64
 
         std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
