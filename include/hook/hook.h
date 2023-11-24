@@ -3,6 +3,7 @@
 
 #include "ulti/everything.h"
 #include "pestructure/pememory/pememory.h"
+#include "process/processcontrol.h"
 #include "teb/getfunction.h"
 #include "Zydis/Zydis.h"
 
@@ -13,6 +14,7 @@ namespace hook
     private:
         std::shared_ptr<pe::PeMemory> pe_memory_;
         std::vector<UCHAR> bytes_code_;
+        std::string hook_dll_path_;
     public:
 
         Hook(int pid);
@@ -26,6 +28,10 @@ namespace hook
         void SetHookingBytesCode(const std::vector<UCHAR> bytes_code);
         std::vector<UCHAR> GetHookingBytesCode() const;
 
+        void SetHookDllPath(const std::string_view& hook_dll_path);
+        std::string GetHookDllPath() const;
+        bool LoadHookDllToTarget();
+        
     protected:
         void SetPeMemory(const std::shared_ptr<pe::PeMemory>& pe_64_memory_);
     };

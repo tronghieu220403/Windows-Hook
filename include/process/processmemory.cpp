@@ -40,11 +40,11 @@ namespace process
         return process_memory_handle_;
     }
 
-    DWORD ProcessMemory::GetMemoryProtection(void* virtual_address, size_t size)
+    DWORD ProcessMemory::GetMemoryProtection(void* rva, size_t size)
     {
         MEMORY_BASIC_INFORMATION mem_info = { 0 };
 
-        if (::VirtualQueryEx(process_memory_handle_, (LPVOID)(virtual_address), &mem_info, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
+        if (::VirtualQueryEx(process_memory_handle_, (LPVOID)(rva), &mem_info, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
         {
             return mem_info.Protect;
         }
@@ -52,40 +52,40 @@ namespace process
         return 0;
     }
 
-    bool ProcessMemory::SetMemoryProtection(void* virtual_address, size_t size, DWORD new_protection)
+    bool ProcessMemory::SetMemoryProtection(void* rva, size_t size, DWORD new_protection)
     {
         DWORD old_protect;
-        return ::VirtualProtectEx(process_memory_handle_, (LPVOID)(virtual_address), size, new_protection, &old_protect) != 0;
+        return ::VirtualProtectEx(process_memory_handle_, (LPVOID)(rva), size, new_protection, &old_protect) != 0;
     }
 
-    std::vector<UCHAR> ProcessMemory::ReadData(void* virtual_address, size_t size)
+    std::vector<UCHAR> ProcessMemory::ReadData(void* rva, size_t size)
     {
         std::vector<UCHAR> buffer(size);
-        if (::ReadProcessMemory(process_memory_handle_, (LPVOID)(virtual_address), buffer.data(), size, NULL) == 0)
+        if (::ReadProcessMemory(process_memory_handle_, (LPVOID)(rva), buffer.data(), size, NULL) == 0)
         {
             return std::vector<UCHAR>();
         }
         return buffer;
     }
 
-    bool ProcessMemory::WriteData(void* virtual_address, std::vector<UCHAR> data)
+    bool ProcessMemory::WriteData(void* rva, std::vector<UCHAR> data)
     {
-        return ProcessMemory::WriteData(virtual_address, data.data(), data.size());
+        return ProcessMemory::WriteData(rva, data.data(), data.size());
     }
 
-    bool ProcessMemory::WriteData(void* virtual_address, const PUCHAR data, size_t size)
+    bool ProcessMemory::WriteData(void* rva, const PUCHAR data, size_t size)
     {
         // WriteProcessMemory() internally does change the MemoryProtection to writable if it can not write.
 
         // First attempt
-        if (::WriteProcessMemory(process_memory_handle_, (LPVOID)(virtual_address), data, size, NULL) != 0)
+        if (::WriteProcessMemory(process_memory_handle_, (LPVOID)(rva), data, size, NULL) != 0)
         {
             return true;
         }
 
         // Second attempt.
         // Howerver, we must change it manually due to some race condition: https://devblogs.microsoft.com/oldnewthing/20190729-00/?p=102737
-        DWORD old_protection = ProcessMemory::GetMemoryProtection(virtual_address, size);
+        DWORD old_protection = ProcessMemory::GetMemoryProtection(rva, size);
         DWORD new_proctection = 0;
         switch (old_protection)
         {
@@ -110,13 +110,13 @@ namespace process
             return false;
         }
 
-        ProcessMemory::SetMemoryProtection(virtual_address, size, new_proctection);
-        if (::WriteProcessMemory(process_memory_handle_, (LPVOID)(virtual_address), data, size, NULL) == 0)
+        ProcessMemory::SetMemoryProtection(rva, size, new_proctection);
+        if (::WriteProcessMemory(process_memory_handle_, (LPVOID)(rva), data, size, NULL) == 0)
         {
-            ProcessMemory::SetMemoryProtection(virtual_address, size, old_protection);
+            ProcessMemory::SetMemoryProtection(rva, size, old_protection);
             return false;
         }
-        ProcessMemory::SetMemoryProtection(virtual_address, size, old_protection);
+        ProcessMemory::SetMemoryProtection(rva, size, old_protection);
         return true;
     }
 

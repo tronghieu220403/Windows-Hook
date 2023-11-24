@@ -9,6 +9,7 @@ namespace hook
         hooking_function_(hooking_function)
     {
         Hook::SetHookingBytesCode(hooking_function_);
+        Hook::LoadHookDllToTarget();
     }
 
     InlineHook::InlineHook(const std::string_view& process_name, const std::string_view& function_name, const std::string_view& dll_name, const PVOID hooking_function):
@@ -22,6 +23,11 @@ namespace hook
 
     bool InlineHook::StartHook()
     {
+        if (Hook::LoadHookDllToTarget() == false)
+        {
+            return false;
+        }
+
         std::shared_ptr<pe::PeMemory> pe_memory = InlineHook::GetPeMemory();
 
         if (pe_memory->GetBaseAddress() == 0)

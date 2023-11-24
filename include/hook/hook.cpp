@@ -25,7 +25,6 @@ namespace hook
         return pe_memory_->ProcessInfo::GetBaseAddress() + function_rva;
     }
 
-
     std::shared_ptr<pe::PeMemory> Hook::GetPeMemory() const
     {
         return pe_memory_;
@@ -75,6 +74,33 @@ namespace hook
     {
         return bytes_code_;
     }
+
+    void Hook::SetHookDllPath(const std::string_view& hook_dll_path)
+    {
+        hook_dll_path_ = hook_dll_path;
+    }
+
+    std::string Hook::GetHookDllPath() const
+    {
+        return hook_dll_path_;
+    }
+
+    bool Hook::LoadHookDllToTarget()
+    {
+        LPVOID mem_ptr = pe_memory_->ProcessMemory::MemoryAlloc(0x300, PAGE_READWRITE);
+        std::vector<UCHAR> data(hook_dll_path_.begin(), hook_dll_path_.end());
+        if (pe_memory_->ProcessMemory::WriteData(mem_ptr, data) == false)
+        {
+            return false;
+        }
+        process::ProcessControl pc(pe_memory_->GetName());
+        if (pc.CreateThread((LPTHREAD_START_ROUTINE)&LoadLibraryA, mem_ptr) == 0)
+        {
+            return false;
+        }
+        return true;
+    }
+    
 
     void Hook::SetPeMemory(const std::shared_ptr<pe::PeMemory> &pe_memory)
     {

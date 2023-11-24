@@ -24,12 +24,12 @@ namespace process
         void Open();
         void Close();
 
-        DWORD GetMemoryProtection(void* virtual_address, size_t size);
-        bool SetMemoryProtection(void* virtual_address, size_t size, DWORD new_protection);
+        DWORD GetMemoryProtection(void* rva, size_t size);
+        bool SetMemoryProtection(void* rva, size_t size, DWORD new_protection);
 
-        std::vector<UCHAR> ReadData(void* virtual_address, size_t size);
-        bool WriteData(void* virtual_address, std::vector<UCHAR> data);
-        bool WriteData(void* virtual_address, const PUCHAR data, size_t size);
+        std::vector<UCHAR> ReadData(void* rva, size_t size);
+        bool WriteData(void* rva, std::vector<UCHAR> data);
+        bool WriteData(void* rva, const PUCHAR data, size_t size);
 
         LPVOID GetNearestFreeMemory(LPVOID rva, size_t size);
         LPVOID MemoryAlloc(size_t size, DWORD protect);

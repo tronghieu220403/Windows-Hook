@@ -41,10 +41,10 @@ namespace hook
 #ifdef _WIN64
         static const inline std::vector<UCHAR> push_param_ =
         {
-            0x51,           // push rcx
-            0x52,           // push rdx
-            0x41, 0x50,     // push r8
             0x41, 0x51,     // push r9
+            0x41, 0x50,     // push r8
+            0x52,           // push rdx
+            0x51,           // push rcx
             0x50,           // push rax
             0x53, 	        // push rbx
             0x55, 	        // push rbp
@@ -66,10 +66,10 @@ namespace hook
             0x5d,	        // pop rbp
             0x5b,	        // pop rbx
             0x58,           // pop rax
-            0x41, 0x59,     // pop r9
-            0x41, 0x58,     // pop r8
+            0x59,           // pop rcx
             0x5a,           // pop rdx
-            0x59            // pop rcx
+            0x41, 0x58,     // pop r8
+            0x41, 0x59      // pop r9
         };  
 #elif _WIN32
         static const inline std::vector<UCHAR> push_param_ = 

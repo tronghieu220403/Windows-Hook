@@ -21,8 +21,8 @@ namespace hook
 
     void IatHookCloseHandle::HookCloseHandle()
     {
+
         std::shared_ptr<pe::PeMemory> pe_memory = IatHook::GetPeMemory();
-        std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
         if (pe_memory->GetBaseAddress() == 0)
         {
@@ -37,6 +37,8 @@ namespace hook
         }
 
         size_t address = ulti::MemoryToUint64(pe_memory->ProcessMemory::ReadData(va_close_handle_iat, sizeof(LPVOID)).data());
+
+        std::vector<UCHAR> bytes_code = Hook::GetHookingBytesCode();
 
         // VirtualAllocEx a memory in target process with READWRITE_EXECUTION.
         LPVOID code_ptr = pe_memory->ProcessMemory::MemoryAlloc(bytes_code.size(), PAGE_EXECUTE_READWRITE);

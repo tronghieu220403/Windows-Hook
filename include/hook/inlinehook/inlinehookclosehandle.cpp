@@ -12,45 +12,45 @@ namespace hook
     {
     }
 
-    void InlineHookCloseHandle::HookedCloseHandleFunction(HANDLE h_object)
+    void InlineHookCloseHandle::HookedCloseHandleFunction()
     {
         FuncAddr iat;
-        char endline[1];
-        endline[0] = '\n';
 
         DWORD bytes_written = 0;
 
         GetFunctionAddressesFromTeb(&iat);
 
-        HANDLE std_output_handle = iat.fnGetStdHandle(STD_OUTPUT_HANDLE);
+        char dll_name[9] = {0};
+        dll_name[0] = 'h';
+        dll_name[1] = 'i';
+        dll_name[2] = 'e';
+        dll_name[3] = 'u';
+        dll_name[4] = '.';
+        dll_name[5] = 'd';
+        dll_name[6] = 'l';
+        dll_name[7] = 'l';        
+        HMODULE dll = iat.fnLoadLibraryExA(dll_name, NULL, NULL);
 
-        size_t value = (size_t)h_object;
-        
-        char number[20];
-        for (int i = 0; i < 20; i++)
-        {
-            number[i] = '\0';
-        }
-        int size = 0;
-        while (value > 0)
-        {
-            number[19 - size] = '0' + value % 10;
-            size++;
-            value = value / 10;
-        }
-        if (size == 0)
-        {
-            size = 1;
-            number[19] = '0';
-        }
+        char function_name[16] = {0};
+        function_name[0] = 'P';
+        function_name[1] = 'r';
+        function_name[2] = 'i';
+        function_name[3] = 'n';
+        function_name[4] = 't';
+        function_name[5] = 'P';
+        function_name[6] = 'a';
+        function_name[7] = 'r';
+        function_name[8] = 'a';
+        function_name[9] = 'm';
+        function_name[10] = 'e';
+        function_name[11] = 't';
+        function_name[12] = 'e';
+        function_name[13] = 'r';
+        function_name[14] = 's';
 
-        iat.fnWriteConsoleA(std_output_handle, number + 20 - size, size, &bytes_written, NULL);
-        iat.fnWriteConsoleA(std_output_handle, endline, 1, &bytes_written, NULL);
+        pFunction fnPrintParameters = (pFunction)(iat.fnGetProcAddress(dll, function_name));
 
-        for (int i = 0; i < 20; i++)
-        {
-            number[i] = '\0';
-        }
+        fnPrintParameters(CLOSE_HANDLE_N_PARAMS);
 
         return;
     }
