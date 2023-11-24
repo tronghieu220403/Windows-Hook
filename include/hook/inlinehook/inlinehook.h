@@ -54,6 +54,8 @@ namespace hook
             0x41, 0x55,	    // push r13
             0x41, 0x56,	    // push r14
             0x41, 0x57	    // push r15
+            //,0x48, 0xB8, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41 // mov rax, 4141414141414141h
+            //,0x50 // push rax
         };  
         static const inline std::vector<UCHAR> pop_param_ = 
         { 

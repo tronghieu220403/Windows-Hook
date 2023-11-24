@@ -28,6 +28,8 @@ namespace hook
             return false;
         }
 
+        Sleep(1000);
+
         std::shared_ptr<pe::PeMemory> pe_memory = InlineHook::GetPeMemory();
 
         if (pe_memory->GetBaseAddress() == 0)

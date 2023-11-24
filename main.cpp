@@ -22,7 +22,7 @@ void IatHook()
 void InlineHook()
 {
 	hook::InlineHookCloseHandle inline_hook_close_handle("Test-Process.exe");
-	inline_hook_close_handle.hook::Hook::SetHookDllPath("hieu.dll");
+	inline_hook_close_handle.hook::Hook::SetHookDllPath("E:\\Code\\VS2022\\hieu\\x64\\Release\\hieu.dll");
 	if (inline_hook_close_handle.InlineHook::StartHook() == false)
 	{
 		std::cout << "Hook error" << std::endl;

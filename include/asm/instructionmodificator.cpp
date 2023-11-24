@@ -38,6 +38,11 @@ namespace assembly
     {
         ZydisDisassembledInstruction instruction = asm_instrucion_.GetZydisDisassembledInstruction();
 
+        if (instruction.info.machine_mode != ZYDIS_MACHINE_MODE_LONG_64)
+        {
+            return std::vector<UCHAR>();
+        }
+
         std::string txt(instruction.text);
 
         if (instruction.info.operand_count_visible != 2)
@@ -85,6 +90,11 @@ namespace assembly
     std::vector<UCHAR> AssemblyInstructionModificator::LeaChangeAdddress(size_t curr_addr)
     {
         ZydisDisassembledInstruction instruction = asm_instrucion_.GetZydisDisassembledInstruction();
+
+        if (instruction.info.machine_mode != ZYDIS_MACHINE_MODE_LONG_64)
+        {
+            return std::vector<UCHAR>();
+        }
 
         ZydisEncoderRequest req;
         ::memset(&req, 0, sizeof(req));
@@ -145,6 +155,7 @@ namespace assembly
             {
                 return std::vector<UCHAR>();
             }
+
             if (instruction.operands[0].mem.disp.has_displacement == 1 && 
                 instruction.operands[0].mem.index == 0 &&
                 (instruction.operands[0].mem.base == 0 || instruction.operands[0].mem.base == ZYDIS_REGISTER_RIP || instruction.operands[0].mem.base == ZYDIS_REGISTER_EIP))
@@ -199,6 +210,7 @@ namespace assembly
             {
                 return std::vector<UCHAR>();
             }
+
             if (instruction.operands[0].mem.disp.has_displacement == 1 &&
                 instruction.operands[0].mem.index == 0 &&
                 (instruction.operands[0].mem.base == 0 || instruction.operands[0].mem.base == ZYDIS_REGISTER_RIP || instruction.operands[0].mem.base == ZYDIS_REGISTER_EIP))

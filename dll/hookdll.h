@@ -3,6 +3,8 @@
 #include <iostream>
 #include <stdarg.h>
 
+#include <Windows.h>
+
 #define EXPORT_FUNCTION __declspec(dllexport)
 
 extern "C"
